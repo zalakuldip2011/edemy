@@ -835,6 +835,51 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Become an educator
+// @route   POST /api/auth/become-educator
+// @access  Private
+const becomeEducator = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    if (user.role === 'instructor') {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already an instructor',
+        code: 'ALREADY_INSTRUCTOR'
+      });
+    }
+
+    // Make user an instructor
+    await user.becomeInstructor();
+
+    console.log(`User became instructor: ${user.email} (${user.username})`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Congratulations! You are now an educator on Edemy.',
+      data: {
+        user
+      }
+    });
+
+  } catch (error) {
+    console.error('Become educator error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error. Please try again later.'
+    });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -847,5 +892,6 @@ module.exports = {
   resetPassword,
   updateProfile,
   changePassword,
-  checkAuth
+  checkAuth,
+  becomeEducator
 };

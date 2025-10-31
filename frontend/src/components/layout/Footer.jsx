@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import { 
   AcademicCapIcon, 
   UserGroupIcon, 
@@ -6,11 +7,12 @@ import {
   ShieldCheckIcon,
   DocumentTextIcon,
   BriefcaseIcon,
-  GlobeAltIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
 
 const Footer = () => {
+  const { isDarkMode } = useTheme();
+  
   const footerSections = [
     {
       title: "About Us",
@@ -73,17 +75,23 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gray-950 border-t border-gray-800">
+    <footer className={`border-t transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gray-950 border-gray-800' 
+        : 'bg-gray-50 border-gray-200'
+    }`}>
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {footerSections.map((section, index) => (
             <div key={index}>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                {section.title === "About Us" && <AcademicCapIcon className="h-5 w-5 mr-2 text-blue-400" />}
-                {section.title === "Teach on Edemy" && <UserGroupIcon className="h-5 w-5 mr-2 text-blue-400" />}
-                {section.title === "Support" && <QuestionMarkCircleIcon className="h-5 w-5 mr-2 text-blue-400" />}
-                {section.title === "Legal" && <ShieldCheckIcon className="h-5 w-5 mr-2 text-blue-400" />}
+              <h3 className={`text-lg font-semibold mb-4 flex items-center transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {section.title === "About Us" && <AcademicCapIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />}
+                {section.title === "Teach on Edemy" && <UserGroupIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />}
+                {section.title === "Support" && <QuestionMarkCircleIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />}
+                {section.title === "Legal" && <ShieldCheckIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />}
                 {section.title}
               </h3>
               <ul className="space-y-3">
@@ -91,7 +99,11 @@ const Footer = () => {
                   <li key={linkIndex}>
                     <a 
                       href={link.href}
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      className={`transition-colors duration-200 ${
+                        isDarkMode 
+                          ? 'text-gray-400 hover:text-white' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
                     >
                       {link.name}
                     </a>
@@ -103,9 +115,13 @@ const Footer = () => {
         </div>
 
         {/* Categories Section */}
-        <div className="mt-16 pt-8 border-t border-gray-800">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <DocumentTextIcon className="h-5 w-5 mr-2 text-blue-400" />
+        <div className={`mt-16 pt-8 border-t transition-colors ${
+          isDarkMode ? 'border-gray-800' : 'border-gray-200'
+        }`}>
+          <h3 className={`text-lg font-semibold mb-4 flex items-center transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            <DocumentTextIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
             Course Categories
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -113,7 +129,11 @@ const Footer = () => {
               <a 
                 key={index}
                 href="#"
-                className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                className={`transition-colors duration-200 text-sm ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-white' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 {category}
               </a>
@@ -122,22 +142,36 @@ const Footer = () => {
         </div>
 
         {/* Newsletter Subscription */}
-        <div className="mt-16 pt-8 border-t border-gray-800">
+        <div className={`mt-16 pt-8 border-t transition-colors ${
+          isDarkMode ? 'border-gray-800' : 'border-gray-200'
+        }`}>
           <div className="max-w-md">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <HeartIcon className="h-5 w-5 mr-2 text-blue-400" />
+            <h3 className={`text-lg font-semibold mb-4 flex items-center transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              <HeartIcon className={`h-5 w-5 mr-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
               Stay Updated
             </h3>
-            <p className="text-gray-400 mb-4">
+            <p className={`mb-4 transition-colors ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               Subscribe to our newsletter for the latest courses and updates.
             </p>
             <div className="flex">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`flex-1 px-4 py-2 border rounded-l-lg transition-colors focus:outline-none focus:ring-2 focus:border-transparent ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:ring-blue-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-blue-500'
+                }`}
               />
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-r-lg transition-colors">
+              <button className={`px-6 py-2 font-medium rounded-r-lg transition-colors ${
+                isDarkMode 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}>
                 Subscribe
               </button>
             </div>
@@ -145,21 +179,35 @@ const Footer = () => {
         </div>
 
         {/* Mobile App Promotion */}
-        <div className="mt-16 pt-8 border-t border-gray-800">
+        <div className={`mt-16 pt-8 border-t transition-colors ${
+          isDarkMode ? 'border-gray-800' : 'border-gray-200'
+        }`}>
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0">
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
                 Learn on the go with our mobile app
               </h3>
-              <p className="text-gray-400">
+              <p className={`transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 Download the Edemy app and learn anytime, anywhere.
               </p>
             </div>
             <div className="flex space-x-4">
-              <button className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+              <button className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-800 hover:bg-gray-700'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" className="h-8" />
               </button>
-              <button className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+              <button className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-800 hover:bg-gray-700'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="App Store" className="h-8" />
               </button>
             </div>
@@ -168,25 +216,37 @@ const Footer = () => {
       </div>
 
       {/* Bottom Footer */}
-      <div className="bg-gray-900 border-t border-gray-800">
+      <div className={`border-t transition-colors ${
+        isDarkMode 
+          ? 'bg-gray-900 border-gray-800'
+          : 'bg-gray-100 border-gray-200'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
             {/* Logo and Copyright */}
             <div className="flex items-center mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold text-blue-400 mr-4">Edemy</h2>
-              <span className="text-gray-400 text-sm">
+              <h2 className={`text-2xl font-bold mr-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Edemy</h2>
+              <span className={`text-sm transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 © 2024 Edemy. All rights reserved.
               </span>
             </div>
 
             {/* Social Links */}
             <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm mr-2">Follow us:</span>
+              <span className={`text-sm mr-2 transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>Follow us:</span>
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
                   href={social.href}
-                  className="text-gray-400 hover:text-white transition-colors duration-200"
+                  className={`transition-colors duration-200 ${
+                    isDarkMode 
+                      ? 'text-gray-400 hover:text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                   aria-label={social.name}
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -194,16 +254,6 @@ const Footer = () => {
                   </svg>
                 </a>
               ))}
-            </div>
-
-            {/* Language and Region */}
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              <button className="flex items-center text-gray-400 hover:text-white transition-colors">
-                <GlobeAltIcon className="h-4 w-4 mr-1" />
-                English
-              </button>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-400 text-sm">USD</span>
             </div>
           </div>
         </div>

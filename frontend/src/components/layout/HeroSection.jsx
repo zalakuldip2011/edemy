@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const HeroSection = () => {
+  const { isDarkMode } = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
@@ -77,7 +79,7 @@ const HeroSection = () => {
               <p className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed">
                 {slide.subtitle}
               </p>
-              <button className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              <button className="theme-button-primary inline-flex items-center px-8 py-4 text-lg font-semibold text-white rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                 {slide.ctaText}
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -57,5 +57,6 @@ router.post('/logout', authController.logout);
 router.get('/me', authController.getMe);
 router.put('/update-profile', authController.updateProfile);
 router.put('/change-password', validateChangePassword, handleValidationErrors, authController.changePassword);
+router.post('/become-educator', authController.becomeEducator);
 
 module.exports = router;

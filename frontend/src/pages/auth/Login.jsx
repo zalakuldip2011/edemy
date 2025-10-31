@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { isDarkMode } = useTheme();
   
   const [formData, setFormData] = useState({
     emailOrUsername: '',
@@ -109,31 +111,35 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="theme-page flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-gray-900 pointer-events-none"></div>
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-50 via-indigo-50 to-gray-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-slate-900"></div>
       
       <div className="relative max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <h1 className="text-4xl font-bold text-blue-400 mb-2">Edemy</h1>
+            <h1 className="text-4xl font-bold mb-2 theme-text-accent">Edemy</h1>
           </Link>
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-          <p className="text-gray-400">Sign in to continue your learning journey</p>
+          <h2 className="text-3xl font-bold mb-2 theme-text-primary">Welcome back</h2>
+          <p className="theme-text-tertiary">Sign in to continue your learning journey</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8">
+        <div className="theme-form-container">{/* Rest of form content follows */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email or Username Field */}
             <div>
-              <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="emailOrUsername" className={`block text-sm font-medium mb-2 transition-colors ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 Email or Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                  <EnvelopeIcon className={`h-5 w-5 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`} />
                 </div>
                 <input
                   id="emailOrUsername"

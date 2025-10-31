@@ -100,6 +100,58 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
+  instructorProfile: {
+    bio: {
+      type: String,
+      maxlength: 500
+    },
+    expertise: [{
+      type: String
+    }],
+    experience: {
+      type: String
+    },
+    qualifications: [{
+      type: String
+    }],
+    socialLinks: {
+      website: String,
+      linkedin: String,
+      twitter: String,
+      youtube: String
+    },
+    isApproved: {
+      type: Boolean,
+      default: false
+    },
+    approvedAt: {
+      type: Date
+    },
+    earnings: {
+      total: {
+        type: Number,
+        default: 0
+      },
+      pending: {
+        type: Number,
+        default: 0
+      },
+      paid: {
+        type: Number,
+        default: 0
+      }
+    },
+    rating: {
+      average: {
+        type: Number,
+        default: 0
+      },
+      count: {
+        type: Number,
+        default: 0
+      }
+    }
+  },
   verification: {
     isEmailVerified: {
       type: Boolean,
@@ -371,6 +423,14 @@ userSchema.methods.canResendOTP = function() {
   
   // Allow resend after 1 minute
   return Date.now() - lastOTPTime > 60 * 1000;
+};
+
+// Instance method to become an instructor
+userSchema.methods.becomeInstructor = function() {
+  this.role = 'instructor';
+  this.instructorProfile.isApproved = true;
+  this.instructorProfile.approvedAt = Date.now();
+  return this.save();
 };
 
 // Instance method to check if user can request password reset (rate limiting)

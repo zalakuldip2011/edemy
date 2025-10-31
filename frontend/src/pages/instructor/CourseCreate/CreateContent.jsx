@@ -1,0 +1,303 @@
+import React, { useState } from 'react';
+import {
+  VideoCameraIcon,
+  DocumentIcon,
+  PhotoIcon,
+  PlusIcon,
+  TrashIcon,
+  ArrowUpIcon,
+  ArrowDownIcon
+} from '@heroicons/react/24/outline';
+
+const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
+  const [sections, setSections] = useState([
+    {
+      id: 1,
+      title: '',
+      description: '',
+      lectures: [
+        {
+          id: 1,
+          title: '',
+          description: '',
+          type: 'video',
+          duration: '',
+          resources: []
+        }
+      ]
+    }
+  ]);
+
+  const addSection = () => {
+    const newSection = {
+      id: Date.now(),
+      title: '',
+      description: '',
+      lectures: []
+    };
+    setSections([...sections, newSection]);
+  };
+
+  const deleteSection = (sectionId) => {
+    setSections(sections.filter(section => section.id !== sectionId));
+  };
+
+  const updateSection = (sectionId, field, value) => {
+    setSections(sections.map(section => 
+      section.id === sectionId 
+        ? { ...section, [field]: value }
+        : section
+    ));
+  };
+
+  const addLecture = (sectionId) => {
+    const newLecture = {
+      id: Date.now(),
+      title: '',
+      description: '',
+      type: 'video',
+      duration: '',
+      resources: []
+    };
+    
+    setSections(sections.map(section => 
+      section.id === sectionId 
+        ? { ...section, lectures: [...section.lectures, newLecture] }
+        : section
+    ));
+  };
+
+  const deleteLecture = (sectionId, lectureId) => {
+    setSections(sections.map(section => 
+      section.id === sectionId 
+        ? { ...section, lectures: section.lectures.filter(lecture => lecture.id !== lectureId) }
+        : section
+    ));
+  };
+
+  const updateLecture = (sectionId, lectureId, field, value) => {
+    setSections(sections.map(section => 
+      section.id === sectionId 
+        ? {
+            ...section,
+            lectures: section.lectures.map(lecture => 
+              lecture.id === lectureId 
+                ? { ...lecture, [field]: value }
+                : lecture
+            )
+          }
+        : section
+    ));
+  };
+
+  const moveLecture = (sectionId, lectureId, direction) => {
+    setSections(sections.map(section => {
+      if (section.id === sectionId) {
+        const lectures = [...section.lectures];
+        const currentIndex = lectures.findIndex(lecture => lecture.id === lectureId);
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        
+        if (newIndex >= 0 && newIndex < lectures.length) {
+          [lectures[currentIndex], lectures[newIndex]] = [lectures[newIndex], lectures[currentIndex]];
+        }
+        
+        return { ...section, lectures };
+      }
+      return section;
+    }));
+  };
+
+  const handleSave = () => {
+    setCourseData({
+      ...courseData,
+      sections: sections
+    });
+    onNext();
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Content</h2>
+        
+        {sections.map((section, sectionIndex) => (
+          <div key={section.id} className="mb-8 border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Section {sectionIndex + 1}
+              </h3>
+              {sections.length > 1 && (
+                <button
+                  onClick={() => deleteSection(section.id)}
+                  className="text-red-600 hover:text-red-700 p-2"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Section Title *
+                </label>
+                <input
+                  type="text"
+                  value={section.title}
+                  onChange={(e) => updateSection(section.id, 'title', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Introduction to React"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Section Description
+                </label>
+                <textarea
+                  value={section.description}
+                  onChange={(e) => updateSection(section.id, 'description', e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Brief description of what this section covers"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-md font-medium text-gray-900">Lectures</h4>
+              
+              {section.lectures.map((lecture, lectureIndex) => (
+                <div key={lecture.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="text-sm font-medium text-gray-900">
+                      Lecture {lectureIndex + 1}
+                    </h5>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => moveLecture(section.id, lecture.id, 'up')}
+                        disabled={lectureIndex === 0}
+                        className="text-gray-600 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowUpIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => moveLecture(section.id, lecture.id, 'down')}
+                        disabled={lectureIndex === section.lectures.length - 1}
+                        className="text-gray-600 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowDownIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteLecture(section.id, lecture.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Lecture Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={lecture.title}
+                        onChange={(e) => updateLecture(section.id, lecture.id, 'title', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="e.g., Setting up React Environment"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Duration (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        value={lecture.duration}
+                        onChange={(e) => updateLecture(section.id, lecture.id, 'duration', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="e.g., 15"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lecture Description
+                    </label>
+                    <textarea
+                      value={lecture.description}
+                      onChange={(e) => updateLecture(section.id, lecture.id, 'description', e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="What will students learn in this lecture?"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Content Type
+                    </label>
+                    <select
+                      value={lecture.type}
+                      onChange={(e) => updateLecture(section.id, lecture.id, 'type', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="video">Video</option>
+                      <option value="article">Article</option>
+                      <option value="quiz">Quiz</option>
+                      <option value="assignment">Assignment</option>
+                    </select>
+                  </div>
+
+                  <div className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                    <VideoCameraIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600">Upload video content</p>
+                    <button className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                      Choose File
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() => addLecture(section.id)}
+                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-colors flex items-center justify-center"
+              >
+                <PlusIcon className="h-5 w-5 mr-2" />
+                Add Lecture
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <button
+          onClick={addSection}
+          className="w-full py-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-colors flex items-center justify-center"
+        >
+          <PlusIcon className="h-6 w-6 mr-2" />
+          Add Section
+        </button>
+      </div>
+
+      <div className="flex justify-between">
+        <button
+          onClick={onPrev}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+        >
+          Previous
+        </button>
+        <button
+          onClick={handleSave}
+          className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CreateContent;

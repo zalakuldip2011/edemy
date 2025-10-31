@@ -49,6 +49,7 @@ app.use(limiter);
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/courses', require('./routes/courses'));
 
 // Basic route
 app.get('/', (req, res) => {

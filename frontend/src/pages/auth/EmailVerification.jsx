@@ -115,10 +115,10 @@ const EmailVerification = () => {
   const isFormValid = formData.email && formData.otp.length === 6;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+    <div className="min-h-screen theme-auth-container flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Main Card */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8 shadow-2xl">
+        <div className="theme-auth-card">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
@@ -126,8 +126,8 @@ const EmailVerification = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Verify Your Email</h1>
-            <p className="text-gray-400">
+            <h1 className="text-3xl font-bold theme-text-primary mb-2">Verify Your Email</h1>
+            <p className="theme-text-tertiary">
               We've sent a 6-digit verification code to your email address. 
               Please enter it below to complete your registration.
             </p>
@@ -137,7 +137,7 @@ const EmailVerification = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium theme-text-secondary mb-2">
                 Email Address
               </label>
               <input
@@ -146,7 +146,7 @@ const EmailVerification = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                className="theme-input w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
                 placeholder="Enter your email address"
                 required
                 disabled={loading}
@@ -155,7 +155,7 @@ const EmailVerification = () => {
 
             {/* OTP Field */}
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="otp" className="block text-sm font-medium theme-text-secondary mb-2">
                 Verification Code
               </label>
               <input
@@ -164,13 +164,13 @@ const EmailVerification = () => {
                 name="otp"
                 value={formData.otp}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center text-2xl font-mono tracking-widest"
+                className="theme-input w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 text-center text-2xl font-mono tracking-widest"
                 placeholder="000000"
                 maxLength={6}
                 required
                 disabled={loading}
               />
-              <p className="text-xs text-gray-500 mt-1">Enter the 6-digit code sent to your email</p>
+              <p className="text-xs theme-text-tertiary mt-1">Enter the 6-digit code sent to your email</p>
             </div>
 
             {/* Error Message */}
@@ -206,14 +206,14 @@ const EmailVerification = () => {
 
           {/* Resend Code */}
           <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm mb-3">
+            <p className="theme-text-tertiary text-sm mb-3">
               Didn't receive the code?
             </p>
             <button
               type="button"
               onClick={handleResendOTP}
               disabled={resendTimer > 0 || resendLoading || !formData.email}
-              className="text-blue-400 hover:text-blue-300 disabled:text-gray-500 disabled:cursor-not-allowed font-medium text-sm transition-colors duration-300"
+              className="theme-text-accent hover:opacity-80 disabled:theme-text-tertiary disabled:cursor-not-allowed font-medium text-sm transition-all duration-300"
             >
               {resendLoading ? (
                 <div className="flex items-center justify-center">
@@ -233,7 +233,7 @@ const EmailVerification = () => {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="text-gray-400 hover:text-white text-sm transition-colors duration-300"
+              className="theme-text-tertiary hover:theme-text-primary text-sm transition-colors duration-300"
             >
               ← Back to login
             </button>
@@ -242,12 +242,12 @@ const EmailVerification = () => {
 
         {/* Help Text */}
         <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm">
+          <p className="theme-text-tertiary text-sm">
             The verification code expires in 10 minutes.
           </p>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="theme-text-tertiary text-sm mt-1">
             Need help? Contact us at{' '}
-            <a href="mailto:support@edemy.com" className="text-blue-400 hover:text-blue-300">
+            <a href="mailto:support@edemy.com" className="theme-text-accent hover:opacity-80">
               support@edemy.com
             </a>
           </p>

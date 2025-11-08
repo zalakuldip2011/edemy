@@ -173,19 +173,19 @@ const VerifyResetOTP = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen theme-auth-container flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <div className="bg-red-100 rounded-full p-3 mb-6">
-              <ShieldCheckIcon className="h-8 w-8 text-red-600" />
+            <div className="bg-purple-100 rounded-full p-3 mb-6">
+              <ShieldCheckIcon className="h-8 w-8 text-purple-600" />
             </div>
           </div>
-          <h2 className="mt-6 text-center text-4xl font-bold text-white">
+          <h2 className="mt-6 text-center text-4xl font-bold theme-text-primary">
             Enter Reset Code
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-300">
-            We've sent a 6-digit reset code to <span className="font-medium text-white">{email}</span>
+          <p className="mt-2 text-center text-sm theme-text-secondary">
+            We've sent a 6-digit reset code to <span className="font-medium theme-text-primary">{email}</span>
           </p>
           {successMessage && (
             <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-lg p-3">
@@ -194,12 +194,12 @@ const VerifyResetOTP = () => {
               </p>
             </div>
           )}
-          <p className="mt-3 text-center text-sm text-slate-400">
+          <p className="mt-3 text-center text-sm theme-text-tertiary">
             Check your email and enter the 6-digit code below to continue
           </p>
         </div>
         
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+        <div className="theme-auth-card">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
@@ -208,7 +208,7 @@ const VerifyResetOTP = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-4 text-center">
+              <label className="block text-sm font-medium theme-text-secondary mb-4 text-center">
                 Enter the 6-digit reset code from your email
               </label>
               <div className="flex justify-center space-x-3">
@@ -220,7 +220,7 @@ const VerifyResetOTP = () => {
                     inputMode="numeric"
                     pattern="[0-9]"
                     maxLength="1"
-                    className="w-12 h-12 text-center text-xl font-bold border border-slate-600 rounded-lg bg-slate-700/50 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                    className="theme-input w-12 h-12 text-center text-xl font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
                     value={digit}
                     onChange={(e) => handleChange(index, e.target.value.replace(/\D/g, ''))}
                     onKeyDown={(e) => handleKeyDown(index, e)}
@@ -231,7 +231,7 @@ const VerifyResetOTP = () => {
             </div>
 
             {/* Timer */}
-            <div className="flex items-center justify-center space-x-2 text-sm text-slate-400">
+            <div className="flex items-center justify-center space-x-2 text-sm theme-text-tertiary">
               <ClockIcon className="h-4 w-4" />
               <span>Code expires in {formatTime(timeLeft)}</span>
             </div>
@@ -255,12 +255,12 @@ const VerifyResetOTP = () => {
                   type="button"
                   onClick={handleResendOTP}
                   disabled={resendLoading}
-                  className="text-sm text-red-400 hover:text-red-300 transition-colors duration-200 disabled:opacity-50"
+                  className="text-sm theme-text-accent hover:opacity-80 transition-all duration-200 disabled:opacity-50"
                 >
                   {resendLoading ? 'Sending...' : 'Resend Code'}
                 </button>
               ) : (
-                <p className="text-sm text-slate-400">
+                <p className="text-sm theme-text-tertiary">
                   Didn't receive the code? You can resend in {formatTime(timeLeft)}
                 </p>
               )}
@@ -270,7 +270,7 @@ const VerifyResetOTP = () => {
           <div className="mt-6 text-center">
             <Link
               to="/forgot-password"
-              className="inline-flex items-center text-sm text-slate-300 hover:text-white transition-colors duration-200"
+              className="inline-flex items-center text-sm theme-text-tertiary hover:theme-text-primary transition-colors duration-200"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-1" />
               Back to Email Entry

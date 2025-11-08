@@ -170,6 +170,52 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
+/* Auth Pages Theme Support */
+.theme-auth-container {
+  transition: background 0.3s ease;
+}
+
+.light-theme .theme-auth-container {
+  background: linear-gradient(to bottom right, #faf5ff, #eff6ff, #fce7f3);
+}
+
+.dark-theme .theme-auth-container {
+  background: linear-gradient(to bottom right, #0f172a, #581c87, #0f172a);
+}
+
+.theme-auth-card {
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.light-theme .theme-auth-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+}
+
+.dark-theme .theme-auth-card {
+  background-color: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid #475569;
+}
+
+/* Enhance theme-input for auth pages */
+.light-theme .theme-input {
+  border-color: #d1d5db;
+}
+
+.dark-theme .theme-input {
+  background-color: rgba(30, 41, 59, 0.5);
+  border-color: #475569;
+}
+
+/* Theme border utility */
+.theme-border {
+  border-color: var(--color-border-primary);
+}
+
 /* Page Layouts */
 .theme-page {
   min-height: 100vh;

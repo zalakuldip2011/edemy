@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import {
   BookOpenIcon,
@@ -10,11 +10,13 @@ import {
   HomeIcon,
   Bars3Icon,
   XMarkIcon,
-  PlusIcon
+  PlusIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -100,7 +102,7 @@ const Sidebar = () => {
         }`}>
           <Link to="/instructor" className="flex items-center">
             <span className={`text-xl font-bold ${
-              isDarkMode ? 'text-red-400' : 'text-purple-600'
+              isDarkMode ? 'text-purple-400' : 'text-purple-600'
             }`}>Edemy</span>
             <span className={`ml-2 text-sm ${
               isDarkMode ? 'text-slate-400' : 'text-gray-500'
@@ -114,10 +116,10 @@ const Sidebar = () => {
         }`}>
           <Link
             to="/instructor/courses/create"
-            className={`flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg transition-colors ${
+            className={`flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg shadow-lg transition-all hover:-translate-y-0.5 ${
               isDarkMode 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-purple-600 hover:bg-purple-700'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-500/20' 
+                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
             }`}
           >
             <PlusIcon className="h-4 w-4 mr-2" />
@@ -136,13 +138,13 @@ const Sidebar = () => {
                 key={item.name}
                 to={item.href}
                 className={`
-                  group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors
+                  group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all
                   ${active 
                     ? (isDarkMode 
-                        ? 'bg-red-500/10 text-red-400 border-r-2 border-red-500' 
+                        ? 'bg-purple-500/10 text-purple-400 border-r-2 border-purple-500 shadow-lg shadow-purple-500/10' 
                         : 'bg-purple-50 text-purple-700 border-r-2 border-purple-600')
                     : (isDarkMode 
-                        ? 'text-slate-300 hover:bg-slate-700 hover:text-white' 
+                        ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white' 
                         : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900')
                   }
                 `}
@@ -151,7 +153,7 @@ const Sidebar = () => {
                 <Icon className={`
                   flex-shrink-0 h-5 w-5 mr-3 transition-colors
                   ${active 
-                    ? (isDarkMode ? 'text-red-400' : 'text-purple-600')
+                    ? (isDarkMode ? 'text-purple-400' : 'text-purple-600')
                     : (isDarkMode ? 'text-slate-500 group-hover:text-slate-300' : 'text-gray-400 group-hover:text-gray-500')
                   }
                 `} />
@@ -166,17 +168,44 @@ const Sidebar = () => {
           })}
         </nav>
 
+        {/* Back to Student View Button */}
+        <div className={`px-4 py-3 border-t transition-colors ${
+          isDarkMode ? 'border-slate-700' : 'border-gray-200'
+        }`}>
+          <button
+            onClick={() => navigate('/')}
+            className={`flex items-center justify-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors border ${
+              isDarkMode 
+                ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+            }`}
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Back to Student View
+          </button>
+        </div>
+
         {/* Bottom section */}
-        <div className="p-4 border-t border-gray-200">
+        <div className={`p-4 border-t transition-colors ${
+          isDarkMode ? 'border-slate-700' : 'border-gray-200'
+        }`}>
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-purple-600">I</span>
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center shadow-md ${
+                isDarkMode ? 'bg-slate-700' : 'bg-purple-100'
+              }`}>
+                <span className={`text-sm font-medium ${
+                  isDarkMode ? 'text-slate-200' : 'text-purple-600'
+                }`}>I</span>
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">Instructor</p>
-              <p className="text-xs text-gray-500">Dashboard</p>
+              <p className={`text-sm font-medium ${
+                isDarkMode ? 'text-slate-200' : 'text-gray-700'
+              }`}>Instructor</p>
+              <p className={`text-xs ${
+                isDarkMode ? 'text-slate-500' : 'text-gray-500'
+              }`}>Dashboard</p>
             </div>
           </div>
         </div>

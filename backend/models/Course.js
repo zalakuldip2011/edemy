@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const courseSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Course title is required'],
+    required: function() {
+      return this.status === 'published';
+    },
     trim: true,
     maxlength: [100, 'Course title cannot exceed 100 characters']
   },
@@ -14,7 +16,9 @@ const courseSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Course description is required'],
+    required: function() {
+      return this.status === 'published';
+    },
     maxlength: [5000, 'Course description cannot exceed 5000 characters']
   },
   instructor: {
@@ -24,7 +28,9 @@ const courseSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: [true, 'Course category is required'],
+    required: function() {
+      return this.status === 'published';
+    },
     enum: [
       'Web Development',
       'Data Science',
@@ -38,7 +44,8 @@ const courseSchema = new mongoose.Schema({
       'Technology',
       'Language',
       'Academic',
-      'Personal Development'
+      'Personal Development',
+      '' // Allow empty for drafts
     ]
   },
   subcategory: {
@@ -47,8 +54,10 @@ const courseSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    required: [true, 'Course level is required'],
-    enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels']
+    required: function() {
+      return this.status === 'published';
+    },
+    enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels', ''] // Allow empty for drafts
   },
   language: {
     type: String,
@@ -56,7 +65,7 @@ const courseSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: [true, 'Course price is required'],
+    default: 0,
     min: 0
   },
   originalPrice: {
@@ -97,12 +106,26 @@ const courseSchema = new mongoose.Schema({
         type: String,
         default: ''
       },
+      type: {
+        type: String,
+        enum: ['video', 'article', 'quiz', 'assignment'],
+        default: 'video'
+      },
+      // YouTube video data
+      videoData: {
+        url: String, // Original YouTube URL
+        videoId: String, // Extracted video ID
+        embedUrl: String, // Embed URL for player
+        thumbnailUrl: String, // Video thumbnail
+        watchUrl: String // YouTube watch URL
+      },
+      // Legacy video URL (kept for backward compatibility)
       videoUrl: {
         type: String,
         default: ''
       },
       duration: {
-        type: Number, // Duration in seconds
+        type: Number, // Duration in minutes
         default: 0
       },
       resources: [{
@@ -120,17 +143,16 @@ const courseSchema = new mongoose.Schema({
       },
       order: {
         type: Number,
-        required: true
+        default: 0
       }
     }],
     order: {
       type: Number,
-      required: true
+      default: 0
     }
   }],
   learningOutcomes: [{
     type: String,
-    required: true,
     trim: true
   }],
   requirements: [{
@@ -139,7 +161,7 @@ const courseSchema = new mongoose.Schema({
   }],
   targetAudience: {
     type: String,
-    required: true
+    default: ''
   },
   tags: [{
     type: String,
@@ -238,6 +260,33 @@ const courseSchema = new mongoose.Schema({
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
+});
+
+// Pre-save validation for published courses
+courseSchema.pre('save', function(next) {
+  if (this.status === 'published') {
+    const errors = [];
+    
+    if (!this.title || this.title.trim() === '') {
+      errors.push('Course title is required for published courses');
+    }
+    if (!this.description || this.description.trim() === '') {
+      errors.push('Course description is required for published courses');
+    }
+    if (!this.category || this.category === '') {
+      errors.push('Course category is required for published courses');
+    }
+    if (!this.level || this.level === '') {
+      errors.push('Course level is required for published courses');
+    }
+    
+    if (errors.length > 0) {
+      const error = new Error(errors.join(', '));
+      error.name = 'ValidationError';
+      return next(error);
+    }
+  }
+  next();
 });
 
 // Indexes for better performance

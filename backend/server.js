@@ -50,6 +50,9 @@ app.use(limiter);
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
+app.use('/api/enrollments', require('./routes/enrollments'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Basic route
 app.get('/', (req, res) => {

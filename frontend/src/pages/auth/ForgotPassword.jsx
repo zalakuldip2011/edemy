@@ -54,18 +54,18 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen theme-auth-container flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-4xl font-bold text-white">
+          <h2 className="mt-6 text-center text-4xl font-bold theme-text-primary">
             Forgot Password?
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-300">
+          <p className="mt-2 text-center text-sm theme-text-secondary">
             No worries! Enter your email address and we'll send you a reset code.
           </p>
         </div>
         
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+        <div className="theme-auth-card">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
@@ -74,12 +74,12 @@ const ForgotPassword = () => {
             )}
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium theme-text-secondary mb-2">
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-slate-400" />
+                  <EnvelopeIcon className="h-5 w-5 theme-text-tertiary" />
                 </div>
                 <input
                   id="email"
@@ -87,7 +87,7 @@ const ForgotPassword = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                  className="theme-input block w-full pl-10 pr-3 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
                   placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -115,7 +115,7 @@ const ForgotPassword = () => {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center text-sm text-slate-300 hover:text-white transition-colors duration-200"
+              className="inline-flex items-center text-sm theme-text-tertiary hover:theme-text-primary transition-colors duration-200"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-1" />
               Back to Login

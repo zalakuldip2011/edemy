@@ -6,27 +6,50 @@ import {
   PlusIcon,
   TrashIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline';
+import YouTubeVideoInput from '../../../components/common/YouTubeVideoInput';
+import YouTubeVideoPlayer from '../../../components/common/YouTubeVideoPlayer';
 
-const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
-  const [sections, setSections] = useState([
-    {
-      id: 1,
-      title: '',
-      description: '',
-      lectures: [
-        {
-          id: 1,
-          title: '',
-          description: '',
-          type: 'video',
-          duration: '',
-          resources: []
-        }
-      ]
+const CreateContent = ({ data, updateData, onNext, onPrev }) => {
+  
+  // Initialize sections with frontend 'id' for tracking
+  const initializeSections = () => {
+    if (data.sections && data.sections.length > 0) {
+      // If we have existing sections, add frontend 'id' based on order or generate timestamp
+      return data.sections.map((section, sectionIndex) => ({
+        ...section,
+        id: section._id || Date.now() + sectionIndex,
+        lectures: section.lectures.map((lecture, lectureIndex) => ({
+          ...lecture,
+          id: lecture._id || Date.now() + sectionIndex + lectureIndex
+        }))
+      }));
     }
-  ]);
+    
+    // Default initial section
+    return [
+      {
+        id: Date.now(),
+        title: '',
+        description: '',
+        lectures: [
+          {
+            id: Date.now() + 1,
+            title: '',
+            description: '',
+            type: 'video',
+            duration: '',
+            videoData: null,
+            resources: []
+          }
+        ]
+      }
+    ];
+  };
+
+  const [sections, setSections] = useState(initializeSections());
 
   const addSection = () => {
     const newSection = {
@@ -57,6 +80,7 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
       description: '',
       type: 'video',
       duration: '',
+      videoData: null, // YouTube video data
       resources: []
     };
     
@@ -108,22 +132,41 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
   };
 
   const handleSave = () => {
-    setCourseData({
-      ...courseData,
-      sections: sections
+    // Transform sections to match backend schema
+    const transformedSections = sections.map((section, sectionIndex) => {
+      // Remove frontend 'id' field and add 'order'
+      const { id, ...sectionData } = section;
+      
+      return {
+        ...sectionData,
+        order: sectionIndex + 1,
+        lectures: section.lectures.map((lecture, lectureIndex) => {
+          // Remove frontend 'id' field and add 'order'
+          const { id, ...lectureData } = lecture;
+          
+          return {
+            ...lectureData,
+            order: lectureIndex + 1
+          };
+        })
+      };
+    });
+
+    updateData({
+      sections: transformedSections
     });
     onNext();
   };
 
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Content</h2>
+      <div className="theme-card rounded-lg p-6">
+        <h2 className="text-2xl font-bold theme-text-primary mb-6">Course Content</h2>
         
         {sections.map((section, sectionIndex) => (
-          <div key={section.id} className="mb-8 border border-gray-200 rounded-lg p-6">
+          <div key={section.id} className="mb-8 theme-border-primary border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold theme-text-primary">
                 Section {sectionIndex + 1}
               </h3>
               {sections.length > 1 && (
@@ -138,52 +181,52 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
 
             <div className="grid grid-cols-1 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium theme-text-secondary mb-2">
                   Section Title *
                 </label>
                 <input
                   type="text"
                   value={section.title}
                   onChange={(e) => updateSection(section.id, 'title', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="e.g., Introduction to React"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium theme-text-secondary mb-2">
                   Section Description
                 </label>
                 <textarea
                   value={section.description}
                   onChange={(e) => updateSection(section.id, 'description', e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Brief description of what this section covers"
                 />
               </div>
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-md font-medium text-gray-900">Lectures</h4>
+              <h4 className="text-md font-medium theme-text-primary">Lectures</h4>
               
               {section.lectures.map((lecture, lectureIndex) => (
-                <div key={lecture.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div key={lecture.id} className="theme-bg-secondary rounded-lg p-4 border theme-border-primary">
                   <div className="flex items-center justify-between mb-4">
-                    <h5 className="text-sm font-medium text-gray-900">
+                    <h5 className="text-sm font-medium theme-text-primary">
                       Lecture {lectureIndex + 1}
                     </h5>
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => moveLecture(section.id, lecture.id, 'up')}
                         disabled={lectureIndex === 0}
-                        className="text-gray-600 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="theme-text-tertiary hover:theme-text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ArrowUpIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => moveLecture(section.id, lecture.id, 'down')}
                         disabled={lectureIndex === section.lectures.length - 1}
-                        className="text-gray-600 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="theme-text-tertiary hover:theme-text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ArrowDownIcon className="h-4 w-4" />
                       </button>
@@ -198,73 +241,121 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium theme-text-secondary mb-2">
                         Lecture Title *
                       </label>
                       <input
                         type="text"
                         value={lecture.title}
                         onChange={(e) => updateLecture(section.id, lecture.id, 'title', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="e.g., Setting up React Environment"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium theme-text-secondary mb-2">
                         Duration (minutes)
                       </label>
                       <input
                         type="number"
                         value={lecture.duration}
                         onChange={(e) => updateLecture(section.id, lecture.id, 'duration', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="e.g., 15"
                       />
                     </div>
                   </div>
 
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium theme-text-secondary mb-2">
                       Lecture Description
                     </label>
                     <textarea
                       value={lecture.description}
                       onChange={(e) => updateLecture(section.id, lecture.id, 'description', e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="What will students learn in this lecture?"
                     />
                   </div>
 
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium theme-text-secondary mb-2">
                       Content Type
                     </label>
                     <select
                       value={lecture.type}
                       onChange={(e) => updateLecture(section.id, lecture.id, 'type', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="theme-input w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
-                      <option value="video">Video</option>
+                      <option value="video">Video (YouTube)</option>
                       <option value="article">Article</option>
                       <option value="quiz">Quiz</option>
                       <option value="assignment">Assignment</option>
                     </select>
                   </div>
 
-                  <div className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                    <VideoCameraIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Upload video content</p>
-                    <button className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
-                      Choose File
-                    </button>
-                  </div>
+                  {/* Video Content Input */}
+                  {lecture.type === 'video' && (
+                    <div className="mt-4">
+                      <YouTubeVideoInput
+                        value={lecture.videoData?.url || ''}
+                        onChange={(videoData) => {
+                          updateLecture(section.id, lecture.id, 'videoData', videoData);
+                        }}
+                        label="YouTube Video URL"
+                        placeholder="Paste your YouTube video URL here (e.g., https://www.youtube.com/watch?v=...)"
+                        required
+                        showPreview={true}
+                      />
+                      
+                      {/* Video Preview */}
+                      {lecture.videoData?.videoId && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium theme-text-secondary mb-2">
+                            Video Preview
+                          </label>
+                          <div className="max-w-md">
+                            <YouTubeVideoPlayer
+                              videoId={lecture.videoData.videoId}
+                              title={lecture.title || `Lecture ${lectureIndex + 1}`}
+                              height="200px"
+                              autoplay={false}
+                              controls={true}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Other Content Types */}
+                  {lecture.type === 'article' && (
+                    <div className="mt-4 p-4 border-2 border-dashed theme-border-primary rounded-lg text-center">
+                      <DocumentIcon className="h-8 w-8 mx-auto theme-text-tertiary mb-2" />
+                      <p className="text-sm theme-text-tertiary">Article content editor will be added here</p>
+                    </div>
+                  )}
+
+                  {lecture.type === 'quiz' && (
+                    <div className="mt-4 p-4 border-2 border-dashed theme-border-primary rounded-lg text-center">
+                      <PhotoIcon className="h-8 w-8 mx-auto theme-text-tertiary mb-2" />
+                      <p className="text-sm theme-text-tertiary">Quiz builder will be added here</p>
+                    </div>
+                  )}
+
+                  {lecture.type === 'assignment' && (
+                    <div className="mt-4 p-4 border-2 border-dashed theme-border-primary rounded-lg text-center">
+                      <DocumentIcon className="h-8 w-8 mx-auto theme-text-tertiary mb-2" />
+                      <p className="text-sm theme-text-tertiary">Assignment creator will be added here</p>
+                    </div>
+                  )}
                 </div>
               ))}
 
               <button
                 onClick={() => addLecture(section.id)}
-                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-colors flex items-center justify-center"
+                className="w-full py-3 border-2 border-dashed theme-border-primary rounded-lg theme-text-tertiary hover:theme-text-accent transition-colors flex items-center justify-center"
               >
                 <PlusIcon className="h-5 w-5 mr-2" />
                 Add Lecture
@@ -275,7 +366,7 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
 
         <button
           onClick={addSection}
-          className="w-full py-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-colors flex items-center justify-center"
+          className="w-full py-4 border-2 border-dashed theme-border-primary rounded-lg theme-text-tertiary hover:theme-text-accent transition-colors flex items-center justify-center"
         >
           <PlusIcon className="h-6 w-6 mr-2" />
           Add Section
@@ -285,13 +376,13 @@ const CreateContent = ({ courseData, setCourseData, onNext, onPrev }) => {
       <div className="flex justify-between">
         <button
           onClick={onPrev}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          className="theme-button-secondary px-6 py-3 border rounded-md transition-colors"
         >
           Previous
         </button>
         <button
           onClick={handleSave}
-          className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+          className="theme-button-primary px-6 py-3 text-white rounded-md transition-colors"
         >
           Continue
         </button>

@@ -254,6 +254,19 @@ const Header = () => {
                       </p>
                     </div>
                     <div className="py-2">
+                      {user?.role === 'instructor' && (
+                        <Link
+                          to="/instructor/dashboard"
+                          className={`block px-4 py-3 text-sm transition-all duration-150 border-l-4 border-transparent ${
+                            isDarkMode
+                              ? 'text-slate-300 hover:text-white hover:bg-slate-700/70 hover:border-blue-500'
+                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:border-blue-500'
+                          }`}
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Instructor Dashboard
+                        </Link>
+                      )}
                       <Link
                         to="/dashboard"
                         className={`block px-4 py-3 text-sm transition-all duration-150 border-l-4 border-transparent ${
@@ -276,19 +289,6 @@ const Header = () => {
                       >
                         Profile
                       </Link>
-                      {user?.role === 'instructor' && (
-                        <Link
-                          to="/instructor/dashboard"
-                          className={`block px-4 py-3 text-sm transition-all duration-150 border-l-4 border-transparent ${
-                            isDarkMode
-                              ? 'text-slate-300 hover:text-white hover:bg-slate-700/70 hover:border-blue-500'
-                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:border-blue-500'
-                          }`}
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Instructor Dashboard
-                        </Link>
-                      )}
                       {user?.role === 'student' && (
                         <Link
                           to="/become-educator"

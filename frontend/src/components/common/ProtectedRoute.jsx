@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 const ProtectedRoute = ({ children, requireAuth = true, allowedRoles = [], redirectTo = '/login' }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   // Show loading spinner while authentication is being checked
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <LoadingSpinner size="lg" />

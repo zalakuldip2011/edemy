@@ -27,9 +27,11 @@ const CourseCreate = () => {
     description: '',
     language: 'English',
     category: '',
+    level: '',
     thumbnail: null,
     price: 0,
     isPaid: false,
+    tags: [],
     welcomeMessage: '',
     congratulationsMessage: ''
   });
@@ -91,30 +93,68 @@ const CourseCreate = () => {
 
   const saveCourse = async (publish = false) => {
     try {
-      const response = await fetch('/api/instructor/courses', {
+      console.log('Saving course with data:', courseData);
+      
+      // Prepare the data to send
+      const dataToSend = {
+        ...courseData,
+        status: publish ? 'published' : 'draft',
+        // Ensure these fields are arrays
+        learningOutcomes: courseData.learningOutcomes || [],
+        prerequisites: courseData.prerequisites || [],
+        sections: courseData.sections || [],
+        tags: courseData.tags || []
+      };
+
+      // Validate required fields after preparing data
+      if (!dataToSend.title || dataToSend.title.trim() === '') {
+        alert('Please enter a course title before publishing.');
+        return;
+      }
+
+      if (!dataToSend.description || dataToSend.description.trim() === '') {
+        alert('Please enter a course description before publishing.');
+        return;
+      }
+
+      if (!dataToSend.category) {
+        alert('Please select a course category before publishing.');
+        return;
+      }
+      
+      const response = await fetch('/api/courses/instructor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          ...courseData,
-          status: publish ? 'published' : 'draft'
-        })
+        body: JSON.stringify(dataToSend)
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      console.log('Backend response:', data);
+
+      if (response.ok && data.success) {
         localStorage.removeItem('courseCreateData');
+        alert(publish ? 'Course published successfully!' : 'Course saved as draft!');
         navigate('/instructor/courses');
         return data;
       } else {
-        throw new Error('Failed to save course');
+        const errorMessage = data.error || data.message || 'Failed to save course';
+        console.error('Backend error:', errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error saving course:', error);
+      alert('Error creating course: ' + error.message);
       throw error;
     }
+  };
+
+  // Local save (just save to localStorage, don't send to backend)
+  const saveProgress = () => {
+    localStorage.setItem('courseCreateData', JSON.stringify(courseData));
+    alert('Progress saved locally! You can continue later.');
   };
 
   const renderCurrentStep = () => {
@@ -125,7 +165,7 @@ const CourseCreate = () => {
             data={courseData}
             updateData={updateCourseData}
             onNext={nextStep}
-            onSave={() => saveCourse(false)}
+            onSave={saveProgress}
           />
         );
       case 2:
@@ -135,7 +175,7 @@ const CourseCreate = () => {
             updateData={updateCourseData}
             onNext={nextStep}
             onPrev={prevStep}
-            onSave={() => saveCourse(false)}
+            onSave={saveProgress}
           />
         );
       case 3:
@@ -155,20 +195,20 @@ const CourseCreate = () => {
 
   return (
     <InstructorLayout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="theme-page">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="theme-bg-card border-b theme-border-primary">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Create Course</h1>
-                <p className="text-gray-600 mt-1">
+                <h1 className="text-2xl font-bold theme-text-primary">Create Course</h1>
+                <p className="theme-text-secondary mt-1">
                   Step {currentStep} of {steps.length}: {steps[currentStep - 1]?.name}
                 </p>
               </div>
               <button
                 onClick={() => navigate('/instructor/courses')}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 theme-text-tertiary hover:theme-text-secondary transition-colors"
               >
                 Exit
               </button>

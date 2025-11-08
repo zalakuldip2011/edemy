@@ -132,7 +132,14 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on app load
   useEffect(() => {
-    checkAuth();
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Only check auth if token exists
+      checkAuth();
+    } else {
+      // No token, user is not authenticated - stop loading immediately
+      dispatch({ type: AUTH_ACTIONS.LOAD_USER_FAILURE, payload: null });
+    }
   }, []);
 
   // Check authentication status

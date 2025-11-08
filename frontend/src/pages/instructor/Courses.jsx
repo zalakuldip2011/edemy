@@ -27,59 +27,25 @@ const Courses = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      // Simulated API call - replace with actual endpoint
-      setTimeout(() => {
-        setCourses([
-          {
-            id: 1,
-            title: "Complete Web Development Bootcamp",
-            subtitle: "Learn HTML, CSS, JavaScript, React, Node.js and more",
-            status: "Published",
-            category: "Web Development",
-            totalLectures: 45,
-            totalDuration: "12h 30m",
-            enrollments: 89,
-            rating: 4.8,
-            totalReviews: 23,
-            revenue: 1250,
-            lastUpdated: "2025-10-20",
-            thumbnail: "/api/placeholder/160/90"
-          },
-          {
-            id: 2,
-            title: "React.js for Beginners",
-            subtitle: "Master the fundamentals of React.js",
-            status: "Draft",
-            category: "Programming",
-            totalLectures: 0,
-            totalDuration: "0h 0m",
-            enrollments: 0,
-            rating: 0,
-            totalReviews: 0,
-            revenue: 0,
-            lastUpdated: "2025-10-22",
-            thumbnail: "/api/placeholder/160/90"
-          },
-          {
-            id: 3,
-            title: "JavaScript Fundamentals",
-            subtitle: "Learn JavaScript from scratch",
-            status: "Published",
-            category: "Programming",
-            totalLectures: 32,
-            totalDuration: "8h 45m",
-            enrollments: 156,
-            rating: 4.6,
-            totalReviews: 45,
-            revenue: 2200,
-            lastUpdated: "2025-10-18",
-            thumbnail: "/api/placeholder/160/90"
-          }
-        ]);
-        setLoading(false);
-      }, 1000);
+      console.log('Fetching instructor courses...');
+      
+      const response = await fetch('/api/courses/instructor', {
+        credentials: 'include'
+      });
+      
+      const data = await response.json();
+      console.log('Instructor courses response:', data);
+      
+      if (data.success) {
+        setCourses(data.data || []);
+      } else {
+        console.error('Failed to fetch courses:', data.message);
+        setCourses([]);
+      }
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCourses([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -108,14 +74,23 @@ const Courses = () => {
 
   const getStatusBadge = (status) => {
     const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    switch (status) {
-      case 'Published':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'Draft':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+    const statusLower = status?.toLowerCase() || 'draft';
+    
+    if (statusLower === 'published') {
+      return `${baseClasses} bg-green-100 text-green-800`;
+    } else if (statusLower === 'draft') {
+      return `${baseClasses} bg-yellow-100 text-yellow-800`;
+    } else if (statusLower === 'archived') {
+      return `${baseClasses} bg-gray-100 text-gray-800`;
     }
+    return `${baseClasses} bg-gray-100 text-gray-800`;
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds || seconds === 0) return '0h 0m';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
   };
 
   if (loading) {
@@ -241,25 +216,25 @@ const Courses = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sortedCourses.map((course) => (
-                    <tr key={course.id} className="hover:bg-gray-50">
+                    <tr key={course._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <img 
-                            src={course.thumbnail} 
+                            src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=160&q=80'} 
                             alt={course.title}
                             className="w-16 h-10 object-cover rounded bg-gray-200 mr-4"
                           />
                           <div className="min-w-0 flex-1">
                             <h3 className="text-sm font-medium text-gray-900 truncate">
-                              {course.title}
+                              {course.title || 'Untitled Course'}
                             </h3>
-                            <p className="text-sm text-gray-500 truncate">{course.subtitle}</p>
+                            <p className="text-sm text-gray-500 truncate">{course.subtitle || 'No subtitle'}</p>
                             <div className="flex items-center space-x-4 mt-1">
                               <span className="text-xs text-gray-400">
-                                {course.totalLectures} lectures
+                                {course.totalLectures || 0} lectures
                               </span>
                               <span className="text-xs text-gray-400">
-                                {course.totalDuration}
+                                {formatDuration(course.totalDuration)}
                               </span>
                             </div>
                           </div>
@@ -267,18 +242,18 @@ const Courses = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={getStatusBadge(course.status)}>
-                          {course.status}
+                          {course.status || 'draft'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {course.enrollments}
+                        {course.totalEnrollments || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {course.rating > 0 ? (
+                        {course.averageRating > 0 ? (
                           <div className="flex items-center">
-                            <span className="text-sm text-gray-900">{course.rating}</span>
+                            <span className="text-sm text-gray-900">{course.averageRating.toFixed(1)}</span>
                             <span className="text-xs text-gray-500 ml-1">
-                              ({course.totalReviews})
+                              ({course.totalReviews || 0})
                             </span>
                           </div>
                         ) : (
@@ -286,20 +261,40 @@ const Courses = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${course.revenue}
+                        ${((course.price || 0) * (course.totalEnrollments || 0)).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <button className="p-2 text-gray-400 hover:text-purple-600 transition-colors">
+                          <Link 
+                            to={`/courses/${course._id}`}
+                            className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                            title="View Course"
+                          >
                             <EyeIcon className="h-4 w-4" />
-                          </button>
-                          <button className="p-2 text-gray-400 hover:text-purple-600 transition-colors">
+                          </Link>
+                          <Link
+                            to={`/instructor/courses/edit/${course._id}`}
+                            className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                            title="Edit Course"
+                          >
                             <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <button className="p-2 text-gray-400 hover:text-purple-600 transition-colors">
+                          </Link>
+                          <button 
+                            className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                            title="View Analytics"
+                          >
                             <ChartBarIcon className="h-4 w-4" />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                          <button 
+                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Delete Course"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this course?')) {
+                                // TODO: Implement delete functionality
+                                console.log('Delete course:', course._id);
+                              }
+                            }}
+                          >
                             <TrashIcon className="h-4 w-4" />
                           </button>
                         </div>

@@ -5,14 +5,16 @@ import {
   EyeIcon,
   GlobeAltIcon,
   TagIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  PhotoIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
-const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
+const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => {
   const [publishSettings, setPublishSettings] = useState({
     isPublished: false,
     visibility: 'public', // public, private, unlisted
-    price: courseData.price || 0,
+    price: data?.price || 0,
     enableDiscounts: false,
     discountPercentage: 0,
     featured: false,
@@ -22,22 +24,85 @@ const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
   });
 
   const [validationErrors, setValidationErrors] = useState([]);
+  const [thumbnailPreview, setThumbnailPreview] = useState(data?.thumbnail || null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState(data?.tags || []);
+
+  // Auto-validate when data changes
+  React.useEffect(() => {
+    if (validationErrors.length > 0) {
+      validateCourse();
+    }
+  }, [data?.title, data?.description, data?.category, data?.level]);
+
+  const handleAddTag = (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!tags.includes(newTag) && tags.length < 10) {
+        const updatedTags = [...tags, newTag];
+        setTags(updatedTags);
+        updateData({ tags: updatedTags });
+        setTagInput('');
+      }
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    const updatedTags = tags.filter(tag => tag !== tagToRemove);
+    setTags(updatedTags);
+    updateData({ tags: updatedTags });
+  };
+
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      setThumbnailFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result);
+        updateData({ thumbnail: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    updateData({ thumbnail: null });
+  };
 
   const validateCourse = () => {
     const errors = [];
     
-    if (!courseData.title) errors.push('Course title is required');
-    if (!courseData.description) errors.push('Course description is required');
-    if (!courseData.category) errors.push('Course category is required');
-    if (!courseData.level) errors.push('Course level is required');
-    if (!courseData.learningOutcomes || courseData.learningOutcomes.length === 0) {
+    if (!data?.title) errors.push('Course title is required');
+    if (!data?.description) errors.push('Course description is required');
+    if (!data?.category) errors.push('Course category is required');
+    if (!data?.level) errors.push('Course level is required');
+    if (!data?.learningOutcomes || data.learningOutcomes.length === 0) {
       errors.push('At least one learning outcome is required');
     }
-    if (!courseData.sections || courseData.sections.length === 0) {
+    if (!data?.sections || data.sections.length === 0) {
       errors.push('At least one section is required');
     }
-    if (courseData.sections) {
-      const hasLectures = courseData.sections.some(section => 
+    if (data?.sections) {
+      const hasLectures = data.sections.some(section => 
         section.lectures && section.lectures.length > 0
       );
       if (!hasLectures) errors.push('At least one lecture is required');
@@ -48,26 +113,30 @@ const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
   };
 
   const handlePublish = () => {
+    // Re-validate before publishing
     if (validateCourse()) {
       const finalCourseData = {
-        ...courseData,
+        ...data,
         ...publishSettings,
         isPublished: true,
         publishedAt: new Date().toISOString()
       };
-      setCourseData(finalCourseData);
-      onSubmit(finalCourseData);
+      updateData(finalCourseData);
+      onPublish(finalCourseData);
+    } else {
+      // Scroll to top to show validation errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleSaveDraft = () => {
     const draftCourseData = {
-      ...courseData,
+      ...data,
       ...publishSettings,
       isPublished: false
     };
-    setCourseData(draftCourseData);
-    onSubmit(draftCourseData);
+    updateData(draftCourseData);
+    onSaveDraft(draftCourseData);
   };
 
   const updatePublishSettings = (field, value) => {
@@ -114,6 +183,232 @@ const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
 
         {/* Publishing Settings */}
         <div className="space-y-6">
+          {/* Basic Course Information */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            
+            <div className="space-y-4">
+              {/* Course Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Title *
+                </label>
+                <input
+                  type="text"
+                  value={data?.title || ''}
+                  onChange={(e) => {
+                    updateData({ title: e.target.value });
+                    // Clear validation errors if title is now filled
+                    if (e.target.value.trim() && validationErrors.includes('Course title is required')) {
+                      setValidationErrors(prev => prev.filter(err => err !== 'Course title is required'));
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    data?.title && data.title.trim() 
+                      ? 'border-green-300 bg-green-50' 
+                      : validationErrors.includes('Course title is required')
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., Complete Web Development Bootcamp"
+                  maxLength={100}
+                />
+                {data?.title && data.title.trim() && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center">
+                    <CheckCircleIcon className="h-4 w-4 mr-1" />
+                    Title looks good!
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  {(data?.title?.length || 0)}/100 characters
+                </p>
+              </div>
+
+              {/* Course Subtitle */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Subtitle
+                </label>
+                <input
+                  type="text"
+                  value={data?.subtitle || ''}
+                  onChange={(e) => updateData({ subtitle: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., Learn HTML, CSS, JavaScript, React and more"
+                  maxLength={200}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {(data?.subtitle?.length || 0)}/200 characters
+                </p>
+              </div>
+
+              {/* Course Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Description *
+                </label>
+                <textarea
+                  value={data?.description || ''}
+                  onChange={(e) => updateData({ description: e.target.value })}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Describe what students will learn in this course..."
+                  maxLength={5000}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {(data?.description?.length || 0)}/5000 characters
+                </p>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  value={data?.category || ''}
+                  onChange={(e) => updateData({ category: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select a category</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Design">Design</option>
+                  <option value="Business">Business</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Photography">Photography</option>
+                  <option value="Music">Music</option>
+                  <option value="Health & Fitness">Health & Fitness</option>
+                  <option value="Programming">Programming</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Language">Language</option>
+                  <option value="Academic">Academic</option>
+                  <option value="Personal Development">Personal Development</option>
+                </select>
+              </div>
+
+              {/* Level */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Level *
+                </label>
+                <select
+                  value={data?.level || ''}
+                  onChange={(e) => updateData({ level: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select a level</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="All Levels">All Levels</option>
+                </select>
+              </div>
+
+              {/* Language */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Language
+                </label>
+                <input
+                  type="text"
+                  value={data?.language || 'English'}
+                  onChange={(e) => updateData({ language: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="English"
+                />
+              </div>
+
+              {/* Course Thumbnail */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Thumbnail
+                </label>
+                <div className="mt-1">
+                  {thumbnailPreview ? (
+                    <div className="relative inline-block">
+                      <img 
+                        src={thumbnailPreview} 
+                        alt="Course thumbnail" 
+                        className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeThumbnail}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <XMarkIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-purple-500 hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <PhotoIcon className="h-12 w-12 text-gray-400 mb-3" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleThumbnailChange}
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Recommended: 1280x720px (16:9 aspect ratio)
+                </p>
+              </div>
+
+              {/* Course Tags */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Tags
+                </label>
+                <div className="space-y-2">
+                  {/* Tags Display */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {tags.map((tag, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
+                        >
+                          <TagIcon className="h-3 w-3 mr-1" />
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-2 hover:text-purple-600"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Tag Input */}
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                    placeholder="Type a tag and press Enter (max 10 tags)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={tags.length >= 10}
+                  />
+                  <p className="text-xs text-gray-500">
+                    {tags.length}/10 tags • Press Enter to add
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Publishing Settings</h3>
             
@@ -242,15 +537,15 @@ const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-600">Title:</p>
-                <p className="font-medium text-gray-900">{courseData.title || 'Not set'}</p>
+                <p className="font-medium text-gray-900">{data?.title || 'Not set'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Category:</p>
-                <p className="font-medium text-gray-900">{courseData.category || 'Not set'}</p>
+                <p className="font-medium text-gray-900">{data?.category || 'Not set'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Level:</p>
-                <p className="font-medium text-gray-900">{courseData.level || 'Not set'}</p>
+                <p className="font-medium text-gray-900">{data?.level || 'Not set'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Price:</p>
@@ -261,13 +556,13 @@ const PublishCourse = ({ courseData, setCourseData, onPrev, onSubmit }) => {
               <div>
                 <p className="text-gray-600">Sections:</p>
                 <p className="font-medium text-gray-900">
-                  {courseData.sections?.length || 0}
+                  {data?.sections?.length || 0}
                 </p>
               </div>
               <div>
                 <p className="text-gray-600">Total Lectures:</p>
                 <p className="font-medium text-gray-900">
-                  {courseData.sections?.reduce((total, section) => 
+                  {data?.sections?.reduce((total, section) => 
                     total + (section.lectures?.length || 0), 0
                   ) || 0}
                 </p>

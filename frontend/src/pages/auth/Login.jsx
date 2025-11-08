@@ -111,11 +111,8 @@ const Login = () => {
   };
 
   return (
-    <div className="theme-page flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-50 via-indigo-50 to-gray-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-slate-900"></div>
-      
-      <div className="relative max-w-md w-full space-y-8">
+    <div className="min-h-screen theme-auth-container flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-block">
@@ -126,20 +123,16 @@ const Login = () => {
         </div>
 
         {/* Login Form */}
-        <div className="theme-form-container">{/* Rest of form content follows */}
+        <div className="theme-auth-card">{/* Rest of form content follows */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email or Username Field */}
             <div>
-              <label htmlFor="emailOrUsername" className={`block text-sm font-medium mb-2 transition-colors ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <label htmlFor="emailOrUsername" className="block text-sm font-medium mb-2 theme-text-secondary">
                 Email or Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className={`h-5 w-5 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`} />
+                  <EnvelopeIcon className="h-5 w-5 theme-text-tertiary" />
                 </div>
                 <input
                   id="emailOrUsername"
@@ -149,8 +142,8 @@ const Login = () => {
                   required
                   value={formData.emailOrUsername}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-4 py-3 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.emailOrUsername ? 'border-red-500' : 'border-gray-600'
+                  className={`theme-input block w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${
+                    errors.emailOrUsername ? 'border-red-500 focus:ring-red-500/50' : 'focus:ring-purple-500/50'
                   }`}
                   placeholder="Enter your email or username"
                 />
@@ -165,12 +158,12 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium mb-2 theme-text-secondary">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="h-5 w-5 theme-text-tertiary" />
                 </div>
                 <input
                   id="password"
@@ -180,20 +173,20 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-12 py-3 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-600'
+                  className={`theme-input block w-full pl-10 pr-12 py-3 rounded-lg focus:outline-none focus:ring-2 ${
+                    errors.password ? 'border-red-500 focus:ring-red-500/50' : 'focus:ring-purple-500/50'
                   }`}
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center theme-text-tertiary hover:theme-text-secondary transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                    <EyeSlashIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+                    <EyeIcon className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -214,9 +207,9 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                  className="h-4 w-4 text-purple-600 rounded focus:ring-purple-500 focus:ring-2"
                 />
-                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-400">
+                <label htmlFor="remember-me" className="ml-2 text-sm theme-text-tertiary">
                   Remember me
                 </label>
               </div>
@@ -224,7 +217,7 @@ const Login = () => {
               <div className="text-sm">
                 <Link 
                   to="/forgot-password" 
-                  className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                  className="font-medium theme-text-accent hover:opacity-80 transition-opacity"
                 >
                   Forgot your password?
                 </Link>
@@ -275,16 +268,16 @@ const Login = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600" />
+                <div className="w-full border-t theme-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+                <span className="px-2 theme-bg-primary theme-text-tertiary">Or continue with</span>
               </div>
             </div>
 
             {/* Social Login Buttons */}
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600 hover:border-gray-500 transition-colors">
+              <button className="w-full inline-flex justify-center py-3 px-4 border theme-border rounded-lg shadow-sm theme-bg-secondary text-sm font-medium theme-text-secondary hover:theme-bg-tertiary transition-colors">
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -294,7 +287,7 @@ const Login = () => {
                 <span className="ml-2">Google</span>
               </button>
 
-              <button className="w-full inline-flex justify-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600 hover:border-gray-500 transition-colors">
+              <button className="w-full inline-flex justify-center py-3 px-4 border theme-border rounded-lg shadow-sm theme-bg-secondary text-sm font-medium theme-text-secondary hover:theme-bg-tertiary transition-colors">
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
                 </svg>
@@ -305,9 +298,9 @@ const Login = () => {
 
           {/* Signup Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm theme-text-tertiary">
               Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+              <Link to="/signup" className="font-medium theme-text-accent hover:opacity-80 transition-opacity">
                 Create one here
               </Link>
             </p>
@@ -315,12 +308,12 @@ const Login = () => {
         </div>
 
         {/* Quick Access */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Quick Access</h3>
-          <div className="space-y-2 text-xs text-gray-400">
+        <div className="theme-card rounded-xl p-4">
+          <h3 className="text-sm font-medium theme-text-secondary mb-3">Quick Access</h3>
+          <div className="space-y-2 text-xs theme-text-tertiary">
             <div className="flex justify-between">
               <span>Demo Student:</span>
-              <span className="text-blue-400">student@edemy.com or student123</span>
+              <span className="theme-text-accent">student@edemy.com or student123</span>
             </div>
             <div className="flex justify-between">
               <span>Demo Instructor:</span>
@@ -328,7 +321,7 @@ const Login = () => {
             </div>
             <div className="flex justify-between">
               <span>Password:</span>
-              <span className="text-gray-300">Demo123!</span>
+              <span className="theme-text-secondary">Demo123!</span>
             </div>
           </div>
         </div>

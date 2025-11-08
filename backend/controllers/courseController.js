@@ -250,6 +250,9 @@ const getCourseStats = async (req, res) => {
 // Create a new course
 const createCourse = async (req, res) => {
   try {
+    console.log('Received course data:', req.body);
+    console.log('User:', req.user);
+    
     const {
       title,
       subtitle,
@@ -260,35 +263,88 @@ const createCourse = async (req, res) => {
       language,
       learningOutcomes,
       requirements,
+      prerequisites,
       targetAudience,
-      tags
+      tags,
+      sections,
+      status,
+      thumbnail
     } = req.body;
 
-    const course = new Course({
-      title,
-      subtitle,
-      description,
-      category,
-      level,
+    // Prepare course data
+    const courseData = {
+      title: title || '',
+      subtitle: subtitle || '',
+      description: description || '',
+      category: category || '',
+      level: level || '',
       price: parseFloat(price) || 0,
       language: language || 'English',
       learningOutcomes: learningOutcomes || [],
-      requirements: requirements || [],
+      requirements: requirements || prerequisites || [],
       targetAudience: targetAudience || '',
       tags: tags || [],
+      sections: sections || [],
+      thumbnail: thumbnail || '',
       instructor: req.user._id,
-      status: 'draft'
-    });
+      status: status || 'draft',
+      isPublished: status === 'published'
+    };
+
+    // Calculate total lectures and duration
+    let totalLectures = 0;
+    let totalDuration = 0;
+    if (sections && Array.isArray(sections)) {
+      sections.forEach(section => {
+        if (section.lectures && Array.isArray(section.lectures)) {
+          totalLectures += section.lectures.length;
+          section.lectures.forEach(lecture => {
+            if (lecture.duration) {
+              totalDuration += parseFloat(lecture.duration) * 60; // Convert minutes to seconds
+            }
+          });
+        }
+      });
+    }
+    
+    courseData.totalLectures = totalLectures;
+    courseData.totalDuration = totalDuration;
+
+    console.log('Creating course with data:', courseData);
+
+    const course = new Course(courseData);
+
+    // If publishing, set published date
+    if (status === 'published') {
+      course.publishedAt = new Date();
+    }
 
     await course.save();
 
+    // Populate instructor data for response
+    await course.populate('instructor', 'name email profilePicture');
+
+    console.log('Course saved successfully:', course._id);
+
     res.status(201).json({
       success: true,
-      message: 'Course created successfully',
+      message: status === 'published' ? 'Course published successfully' : 'Course saved as draft',
       data: course
     });
   } catch (error) {
     console.error('Error creating course:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        error: validationErrors.join(', '),
+        errors: validationErrors
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Error creating course',

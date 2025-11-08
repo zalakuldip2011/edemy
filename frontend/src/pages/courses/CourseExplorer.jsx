@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -7,16 +8,20 @@ import {
   ClockIcon,
   UsersIcon,
   ChevronDownIcon,
-  XMarkIcon
+  XMarkIcon,
+  Squares2X2Icon,
+  ListBulletIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import SkeletonLoader from '../../components/common/SkeletonLoader';
 
 const CourseExplorer = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [popularTags, setPopularTags] = useState([]);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -331,9 +336,37 @@ const CourseExplorer = () => {
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Results Header */}
           <div className="flex items-center justify-between mb-8">
-            <p className="text-slate-300 text-lg">
-              {pagination.totalCourses} courses found
-            </p>
+            <div className="flex items-center gap-6">
+              <p className="text-slate-300 text-lg">
+                {pagination.totalCourses} courses found
+              </p>
+              
+              {/* View Toggle */}
+              <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-all duration-200 ${
+                    viewMode === 'grid'
+                      ? 'bg-purple-600 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                  title="Grid View"
+                >
+                  <Squares2X2Icon className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-all duration-200 ${
+                    viewMode === 'list'
+                      ? 'bg-purple-600 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                  title="List View"
+                >
+                  <ListBulletIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
             
             {/* Active Filters */}
             {filters.tags.length > 0 && (
@@ -359,90 +392,120 @@ const CourseExplorer = () => {
 
           {/* Loading State */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 animate-pulse">
-                  <div className="w-full h-48 bg-slate-700/50 rounded-t-xl"></div>
-                  <div className="p-6">
-                    <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-3"></div>
-                    <div className="h-3 bg-slate-700/50 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-slate-700/50 rounded w-1/4"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SkeletonLoader count={12} />
           ) : (
             <>
               {/* Course Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              <div className={`mb-8 ${
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                  : 'space-y-4'
+              }`}>
                 {courses.map(course => (
-                  <div key={course._id} className="bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-slate-700/50 hover:shadow-2xl hover:border-slate-600/50 transition-all duration-300 transform hover:scale-105 group">
+                  <Link 
+                    key={course._id} 
+                    to={`/courses/${course._id}`}
+                    className={`block bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-slate-700/50 hover:shadow-2xl hover:border-slate-600/50 transition-all duration-300 group ${
+                      viewMode === 'grid'
+                        ? 'transform hover:scale-105'
+                        : 'flex gap-6 hover:bg-slate-800/70'
+                    }`}
+                  >
                     {/* Course Image */}
-                    <div className="w-full h-48 bg-gradient-to-br from-purple-600 to-purple-800 rounded-t-xl flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-900/20"></div>
-                      <span className="text-white text-2xl font-bold z-10">
-                        {course.title.charAt(0)}
-                      </span>
+                    <div className={`bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center relative overflow-hidden ${
+                      viewMode === 'grid'
+                        ? 'w-full h-48 rounded-t-xl'
+                        : 'w-64 h-40 rounded-l-xl flex-shrink-0'
+                    }`}>
+                      {course.thumbnail ? (
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-900/20"></div>
+                          <span className="text-white text-2xl font-bold z-10">
+                            {course.title?.charAt(0) || 'C'}
+                          </span>
+                        </>
+                      )}
                     </div>
 
-                    <div className="p-6">
+                    <div className={`p-6 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+                      {/* Category Badge */}
+                      {course.category && (
+                        <span className="inline-block px-3 py-1 mb-2 text-xs font-semibold text-purple-300 bg-purple-600/20 rounded-full border border-purple-500/30">
+                          {course.category}
+                        </span>
+                      )}
+
                       {/* Course Title */}
-                      <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2 group-hover:text-purple-300 transition-colors">
+                      <h3 className={`font-semibold text-white mb-2 group-hover:text-purple-300 transition-colors ${
+                        viewMode === 'grid' ? 'text-lg line-clamp-2' : 'text-xl line-clamp-1'
+                      }`}>
                         {course.title}
                       </h3>
 
+                      {/* Description (List View Only) */}
+                      {viewMode === 'list' && course.description && (
+                        <p className="text-slate-400 text-sm mb-3 line-clamp-2">
+                          {course.description}
+                        </p>
+                      )}
+
                       {/* Instructor */}
                       <p className="text-slate-400 text-sm mb-3">
-                        by {course.instructor?.name || 'Anonymous'}
+                        {course.instructor?.name || 'Unknown Instructor'}
                       </p>
 
                       {/* Rating */}
-                      <div className="mb-4">
+                      <div className="flex items-center mb-3">
                         {renderStars(course.averageRating || 0)}
+                        {course.enrollmentCount > 0 && (
+                          <span className="ml-2 text-sm text-slate-400">
+                            ({course.enrollmentCount} students)
+                          </span>
+                        )}
                       </div>
 
-                      {/* Course Info */}
-                      <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                        <span className="flex items-center gap-2">
-                          <ClockIcon className="h-4 w-4" />
-                          {course.totalDuration || '0h'}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <UsersIcon className="h-4 w-4" />
-                          {course.totalEnrollments || 0}
-                        </span>
+                      {/* Course Meta */}
+                      <div className={`flex items-center gap-4 text-sm text-slate-400 mb-4 ${
+                        viewMode === 'list' ? 'mb-0' : ''
+                      }`}>
+                        {course.totalDuration && (
+                          <div className="flex items-center gap-1">
+                            <ClockIcon className="h-4 w-4" />
+                            <span>{Math.floor(course.totalDuration / 3600)}h</span>
+                          </div>
+                        )}
+                        {course.totalLectures && (
+                          <div className="flex items-center gap-1">
+                            <UsersIcon className="h-4 w-4" />
+                            <span>{course.totalLectures} lectures</span>
+                          </div>
+                        )}
+                        {course.level && (
+                          <span className="px-2 py-1 bg-slate-700/50 rounded text-xs">
+                            {course.level}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Tags */}
-                      {course.tags && course.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {course.tags.slice(0, 3).map(tag => (
-                            <span
-                              key={tag}
-                              className="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs border border-slate-600/50"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {course.tags.length > 3 && (
-                            <span className="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs border border-slate-600/50">
-                              +{course.tags.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Price and CTA */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-purple-400">
+                      {/* Price */}
+                      <div className={`flex items-center justify-between ${
+                        viewMode === 'grid' ? 'pt-4 border-t border-slate-700/50' : ''
+                      }`}>
+                        <span className="text-2xl font-bold text-white">
                           {formatPrice(course.price)}
                         </span>
-                        <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-sm font-medium">
-                          View Course
+                        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                          Enroll
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
 

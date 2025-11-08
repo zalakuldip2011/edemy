@@ -121,25 +121,25 @@ const ResetPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen theme-auth-container flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+          <div className="theme-auth-card">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
                 <CheckCircleIcon className="h-8 w-8 text-green-600" />
               </div>
               
-              <h2 className="text-3xl font-bold text-white mb-4">
+              <h2 className="text-3xl font-bold theme-text-primary mb-4">
                 Password Reset Successfully!
               </h2>
               
-              <p className="text-slate-300 mb-8">
+              <p className="theme-text-secondary mb-8">
                 Your password has been reset successfully. You can now login with your new password.
               </p>
               
               <Link
                 to="/login"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-slate-800 transition-all duration-200"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
               >
                 Continue to Login
               </Link>
@@ -151,23 +151,23 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen theme-auth-container flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <div className="bg-red-100 rounded-full p-3 mb-6">
-              <LockClosedIcon className="h-8 w-8 text-red-600" />
+            <div className="bg-purple-100 rounded-full p-3 mb-6">
+              <LockClosedIcon className="h-8 w-8 text-purple-600" />
             </div>
           </div>
-          <h2 className="mt-6 text-center text-4xl font-bold text-white">
+          <h2 className="mt-6 text-center text-4xl font-bold theme-text-primary">
             Reset Your Password
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-300">
-            Create a new secure password for <span className="font-medium text-white">{email}</span>
+          <p className="mt-2 text-center text-sm theme-text-secondary">
+            Create a new secure password for <span className="font-medium theme-text-primary">{email}</span>
           </p>
         </div>
         
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+        <div className="theme-auth-card">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
@@ -177,19 +177,19 @@ const ResetPassword = () => {
 
             {/* New Password */}
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="newPassword" className="block text-sm font-medium theme-text-secondary mb-2">
                 New Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-slate-400" />
+                  <LockClosedIcon className="h-5 w-5 theme-text-tertiary" />
                 </div>
                 <input
                   id="newPassword"
                   name="newPassword"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="block w-full pl-10 pr-10 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                  className="theme-input block w-full pl-10 pr-10 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
                   placeholder="Enter your new password"
                   value={formData.newPassword}
                   onChange={handleChange}
@@ -197,13 +197,13 @@ const ResetPassword = () => {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center theme-text-tertiary hover:theme-text-secondary"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
+                    <EyeSlashIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
+                    <EyeIcon className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -212,7 +212,7 @@ const ResetPassword = () => {
             {/* Password Strength Indicator */}
             {formData.newPassword && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-slate-300">Password Requirements:</p>
+                <p className="text-sm font-medium theme-text-secondary">Password Requirements:</p>
                 <div className="space-y-1">
                   {[
                     { key: 'hasLength', text: 'At least 8 characters' },
@@ -223,10 +223,10 @@ const ResetPassword = () => {
                   ].map(({ key, text }) => (
                     <div key={key} className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${
-                        passwordStrength[key] ? 'bg-green-500' : 'bg-slate-600'
+                        passwordStrength[key] ? 'bg-green-500' : 'theme-bg-tertiary'
                       }`} />
                       <span className={`text-xs ${
-                        passwordStrength[key] ? 'text-green-400' : 'text-slate-400'
+                        passwordStrength[key] ? 'text-green-400' : 'theme-text-tertiary'
                       }`}>
                         {text}
                       </span>
@@ -238,19 +238,19 @@ const ResetPassword = () => {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium theme-text-secondary mb-2">
                 Confirm New Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-slate-400" />
+                  <LockClosedIcon className="h-5 w-5 theme-text-tertiary" />
                 </div>
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
-                  className="block w-full pl-10 pr-10 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                  className="theme-input block w-full pl-10 pr-10 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-200"
                   placeholder="Confirm your new password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
@@ -258,13 +258,13 @@ const ResetPassword = () => {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center theme-text-tertiary hover:theme-text-secondary"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
+                    <EyeSlashIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-slate-400 hover:text-slate-300" />
+                    <EyeIcon className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -303,7 +303,7 @@ const ResetPassword = () => {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="text-sm text-slate-300 hover:text-white transition-colors duration-200"
+              className="text-sm theme-text-tertiary hover:theme-text-primary transition-colors duration-200"
             >
               Remember your password? Sign in
             </Link>

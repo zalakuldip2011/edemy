@@ -1,8 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import LoadingSpinner from './components/common/LoadingSpinner';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
@@ -20,8 +22,73 @@ import UserProfile from './pages/profile/UserProfile';
 import './App.css';
 import './styles/theme-global.css';
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        
+        {/* Course Explorer - Public Access */}
+        <Route path="/courses/*" element={<CoursesRoutes />} />
+        
+        {/* User Profile */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+        
+        {/* Student Dashboard */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        {/* Educator Onboarding */}
+        <Route path="/become-educator" element={
+          <ProtectedRoute>
+            <BecomeEducator />
+          </ProtectedRoute>
+        } />
+        
+        {/* Instructor Dashboard */}
+        <Route path="/instructor/dashboard" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <InstructorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/instructor" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <InstructorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/instructor/courses" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <InstructorCourses />
+          </ProtectedRoute>
+        } />
+        <Route path="/instructor/courses/create" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <CourseCreate />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const AppContent = () => {
   const { isDarkMode } = useTheme();
+  const { isLoading } = useAuth();
   
   React.useEffect(() => {
     // Apply theme to document element for CSS variables
@@ -29,64 +96,24 @@ const AppContent = () => {
     document.body.className = isDarkMode ? 'dark-theme' : 'light-theme';
   }, [isDarkMode]);
   
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className={`App theme-page ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
-      <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/verify-email" element={<EmailVerification />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      
-      {/* Course Explorer - Public Access */}
-      <Route path="/courses/*" element={<CoursesRoutes />} />
-      
-      {/* User Profile */}
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <UserProfile />
-        </ProtectedRoute>
-      } />
-      
-      {/* Student Dashboard */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute allowedRoles={['student']}>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      
-      {/* Educator Onboarding */}
-      <Route path="/become-educator" element={
-        <ProtectedRoute>
-          <BecomeEducator />
-        </ProtectedRoute>
-      } />
-      
-      {/* Instructor Dashboard */}
-      <Route path="/instructor/dashboard" element={
-        <ProtectedRoute allowedRoles={['instructor']}>
-          <InstructorDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/instructor" element={
-        <ProtectedRoute allowedRoles={['instructor']}>
-          <InstructorDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/instructor/courses" element={
-        <ProtectedRoute allowedRoles={['instructor']}>
-          <InstructorCourses />
-        </ProtectedRoute>
-      } />
-      <Route path="/instructor/courses/create" element={
-        <ProtectedRoute allowedRoles={['instructor']}>
-          <CourseCreate />
-        </ProtectedRoute>
-      } />
-    </Routes>
-  </div>
+      <AnimatedRoutes />
+    </div>
   );
 };
 

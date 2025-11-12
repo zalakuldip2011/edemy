@@ -461,6 +461,29 @@ const Signup = () => {
             <span>✓ Lifetime Access</span>
           </div>
         </div>
+
+        {/* Back to Home Link */}
+        <div className="text-center mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center text-sm font-medium theme-text-accent hover:opacity-80 transition-opacity"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

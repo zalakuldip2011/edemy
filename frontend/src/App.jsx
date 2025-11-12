@@ -27,6 +27,20 @@ import MyLearning from './pages/MyLearning';
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import AuthenticatedHome from './pages/AuthenticatedHome';
+// About Pages
+import AboutEdemy from './pages/about/AboutEdemy';
+import OurMission from './pages/about/OurMission';
+import Team from './pages/about/Team';
+// Teach Pages
+import BecomeInstructor from './pages/teach/BecomeInstructor';
+import TeachingGuidelines from './pages/teach/TeachingGuidelines';
+// Legal Pages
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+import CommunityGuidelines from './pages/legal/CommunityGuidelines';
+// Support Pages
+import HelpCenter from './pages/support/HelpCenter';
+import Contact from './pages/support/Contact';
 import './App.css';
 import './styles/theme-global.css';
 
@@ -47,6 +61,24 @@ const AnimatedRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        
+        {/* About Pages - Public Access */}
+        <Route path="/about" element={<AboutEdemy />} />
+        <Route path="/mission" element={<OurMission />} />
+        <Route path="/team" element={<Team />} />
+        
+        {/* Teach Pages - Public Access */}
+        <Route path="/teach" element={<BecomeInstructor />} />
+        <Route path="/teach/guidelines" element={<TeachingGuidelines />} />
+        
+        {/* Legal Pages - Public Access */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+        
+        {/* Support Pages - Public Access */}
+        <Route path="/support" element={<HelpCenter />} />
+        <Route path="/contact" element={<Contact />} />
         
         {/* Course Explorer - Public Access */}
         <Route path="/courses/*" element={<CoursesRoutes />} />

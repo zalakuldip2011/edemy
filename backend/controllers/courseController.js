@@ -1,6 +1,7 @@
 const Course = require('../models/Course');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const { getPersonalizedCourses } = require('../services/recommendationService');
 
 // Helper function to validate MongoDB ObjectId
 const isValidObjectId = (id) => {
@@ -1122,6 +1123,69 @@ module.exports = {
   getPopularTags,
   getCourseById,
   getCategories,
+  
+  // Instructor endpoints
+  getInstructorCourses,
+  getCourseStats,
+  createCourse,
+  getInstructorCourse,
+  updateCourse,
+  togglePublishCourse,
+  deleteCourse,
+  toggleCourseStatus,
+  getCourseAnalytics
+};
+
+// Get personalized courses for user (requires authentication)
+const getPersonalizedCoursesForUser = async (req, res) => {
+  try {
+    console.log('🎯 GET PERSONALIZED COURSES');
+    console.log('   User ID:', req.user?.id);
+
+    const limit = parseInt(req.query.limit) || 12;
+    
+    // Get full user with interests
+    const user = await User.findById(req.user.id).select('interests');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const courses = await getPersonalizedCourses(user, limit);
+
+    console.log('   ✅ Returning', courses.length, 'personalized courses');
+
+    res.json({
+      success: true,
+      data: {
+        courses,
+        hasInterests: user.interests?.hasCompletedInterests || false,
+        interestCategories: user.interests?.categories || []
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error getting personalized courses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching personalized courses',
+      error: error.message
+    });
+  }
+};
+
+module.exports = {
+  // Public endpoints
+  getCourses,
+  getCoursesByCategory,
+  getFeaturedCourses,
+  getPopularTags,
+  getCourseById,
+  getCategories,
+  getPersonalizedCoursesForUser,
   
   // Instructor endpoints
   getInstructorCourses,

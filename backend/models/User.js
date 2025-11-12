@@ -100,6 +100,65 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
+  interests: {
+    categories: [{
+      type: String,
+      enum: [
+        'Web Development',
+        'Mobile Development',
+        'Data Science',
+        'Machine Learning',
+        'Artificial Intelligence',
+        'Cloud Computing',
+        'DevOps',
+        'Cybersecurity',
+        'Blockchain',
+        'Game Development',
+        'UI/UX Design',
+        'Graphic Design',
+        '3D & Animation',
+        'Digital Marketing',
+        'Business',
+        'Finance & Accounting',
+        'Entrepreneurship',
+        'Personal Development',
+        'Photography',
+        'Video Production',
+        'Music',
+        'Health & Fitness',
+        'Language Learning',
+        'Academic',
+        'Test Prep',
+        'Other'
+      ]
+    }],
+    skillLevel: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+      default: 'beginner'
+    },
+    goals: [{
+      type: String,
+      enum: [
+        'Career Advancement',
+        'Skill Development',
+        'Certification',
+        'Hobby',
+        'Academic Requirements',
+        'Business Growth',
+        'Personal Interest',
+        'Other'
+      ]
+    }],
+    hasCompletedInterests: {
+      type: Boolean,
+      default: false
+    },
+    lastUpdated: {
+      type: Date,
+      default: null
+    }
+  },
   instructorProfile: {
     bio: {
       type: String,

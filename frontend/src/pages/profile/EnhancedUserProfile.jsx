@@ -16,9 +16,11 @@ import {
   TrashIcon,
   KeyIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
+import InterestsModal from '../../components/common/InterestsModal';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -61,8 +63,12 @@ const EnhancedUserProfile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  // Interests modal
+  const [showInterestsModal, setShowInterestsModal] = useState(false);
+
   const tabs = [
     { id: 'profile', name: 'Profile', icon: UserCircleIcon },
+    { id: 'interests', name: 'Interests', icon: SparklesIcon },
     { id: 'settings', name: 'Settings', icon: CogIcon },
     { id: 'security', name: 'Security', icon: ShieldCheckIcon },
     { id: 'danger', name: 'Danger Zone', icon: ExclamationTriangleIcon }
@@ -696,6 +702,145 @@ const EnhancedUserProfile = () => {
               </div>
             )}
 
+            {/* Interests Tab */}
+            {activeTab === 'interests' && (
+              <div className={`rounded-xl shadow-lg border transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-slate-800/50 backdrop-blur-lg border-slate-700/50' 
+                  : 'bg-white border-gray-200'
+              } p-8`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className={`text-2xl font-bold mb-2 transition-colors ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Your Learning Interests
+                    </h2>
+                    <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                      Customize your learning experience by updating your interests and goals
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowInterestsModal(true)}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium flex items-center space-x-2"
+                  >
+                    <SparklesIcon className="h-5 w-5" />
+                    <span>Update Interests</span>
+                  </button>
+                </div>
+
+                {user?.interests?.hasCompletedInterests ? (
+                  <div className="space-y-6">
+                    {/* Categories */}
+                    <div className={`p-6 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-700/30 border-slate-600/50' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        <span>📚</span>
+                        <span>Interest Categories</span>
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user?.interests?.categories?.map((category, index) => (
+                          <span
+                            key={index}
+                            className={`px-4 py-2 rounded-lg border-2 font-medium transition-colors ${
+                              isDarkMode
+                                ? 'bg-blue-500/10 border-blue-500/50 text-blue-400'
+                                : 'bg-blue-50 border-blue-200 text-blue-700'
+                            }`}
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Skill Level */}
+                    <div className={`p-6 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-700/30 border-slate-600/50' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        <span>📊</span>
+                        <span>Skill Level</span>
+                      </h3>
+                      <span className={`inline-block px-6 py-3 rounded-lg font-semibold text-lg capitalize ${
+                        isDarkMode
+                          ? 'bg-purple-500/10 border-2 border-purple-500/50 text-purple-400'
+                          : 'bg-purple-50 border-2 border-purple-200 text-purple-700'
+                      }`}>
+                        {user?.interests?.skillLevel || 'Beginner'}
+                      </span>
+                    </div>
+
+                    {/* Goals */}
+                    {user?.interests?.goals && user?.interests?.goals.length > 0 && (
+                      <div className={`p-6 rounded-lg border ${
+                        isDarkMode ? 'bg-slate-700/30 border-slate-600/50' : 'bg-gray-50 border-gray-200'
+                      }`}>
+                        <h3 className={`text-lg font-semibold mb-4 flex items-center space-x-2 ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
+                          <span>🎯</span>
+                          <span>Learning Goals</span>
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {user?.interests?.goals?.map((goal, index) => (
+                            <span
+                              key={index}
+                              className={`px-4 py-2 rounded-lg border-2 font-medium transition-colors ${
+                                isDarkMode
+                                  ? 'bg-green-500/10 border-green-500/50 text-green-400'
+                                  : 'bg-green-50 border-green-200 text-green-700'
+                              }`}
+                            >
+                              {goal}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Last Updated */}
+                    {user?.interests?.lastUpdated && (
+                      <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                        Last updated: {new Date(user?.interests?.lastUpdated).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className={`p-12 text-center rounded-lg border-2 border-dashed ${
+                    isDarkMode ? 'border-slate-600 bg-slate-700/30' : 'border-gray-300 bg-gray-50'
+                  }`}>
+                    <SparklesIcon className={`h-16 w-16 mx-auto mb-4 ${
+                      isDarkMode ? 'text-slate-600' : 'text-gray-400'
+                    }`} />
+                    <h3 className={`text-xl font-semibold mb-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      No interests set yet
+                    </h3>
+                    <p className={`mb-6 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                      Tell us what you'd like to learn to get personalized course recommendations
+                    </p>
+                    <button
+                      onClick={() => setShowInterestsModal(true)}
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg font-medium"
+                    >
+                      Set Up My Interests
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div className={`rounded-xl shadow-lg border transition-colors duration-300 ${
@@ -1036,6 +1181,16 @@ const EnhancedUserProfile = () => {
           </div>
         </div>
       )}
+      
+      {/* Interests Modal */}
+      <InterestsModal
+        isOpen={showInterestsModal}
+        onClose={() => setShowInterestsModal(false)}
+        onComplete={() => {
+          setShowInterestsModal(false);
+          success('Your interests have been updated successfully!');
+        }}
+      />
       
       <Footer />
     </div>

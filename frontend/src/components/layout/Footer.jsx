@@ -19,45 +19,32 @@ const Footer = () => {
     {
       title: "About Us",
       links: [
-        { name: "About Edemy", href: "#" },
-        { name: "Our Mission", href: "#" },
-        { name: "Team", href: "#" },
-        { name: "Careers", href: "#" },
-        { name: "Press", href: "#" },
-        { name: "Blog", href: "#" }
+        { name: "About Edemy", href: "/about" },
+        { name: "Our Mission", href: "/mission" },
+        { name: "Team", href: "/team" }
       ]
     },
     {
       title: "Teach on Edemy",
       links: [
-        { name: "Become an Instructor", href: "#" },
-        { name: "Instructor Dashboard", href: "#" },
-        { name: "Course Creation", href: "#" },
-        { name: "Teaching Guidelines", href: "#" },
-        { name: "Instructor Support", href: "#" },
-        { name: "Promotion Tips", href: "#" }
+        { name: "Become an Instructor", href: "/teach" },
+        { name: "Instructor Dashboard", href: "/instructor/dashboard" },
+        { name: "Teaching Guidelines", href: "/teach/guidelines" }
       ]
     },
     {
       title: "Support",
       links: [
-        { name: "Help Center", href: "#" },
-        { name: "Contact Us", href: "#" },
-        { name: "Student Support", href: "#" },
-        { name: "Technical Issues", href: "#" },
-        { name: "Course Refunds", href: "#" },
-        { name: "Accessibility", href: "#" }
+        { name: "Help Center", href: "/support" },
+        { name: "Contact Us", href: "/contact" }
       ]
     },
     {
       title: "Legal",
       links: [
-        { name: "Privacy Policy", href: "#" },
-        { name: "Terms of Service", href: "#" },
-        { name: "Cookie Policy", href: "#" },
-        { name: "GDPR", href: "#" },
-        { name: "Copyright Policy", href: "#" },
-        { name: "Community Guidelines", href: "#" }
+        { name: "Privacy Policy", href: "/privacy" },
+        { name: "Terms of Service", href: "/terms" },
+        { name: "Community Guidelines", href: "/community-guidelines" }
       ]
     }
   ];

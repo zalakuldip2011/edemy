@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import InterestsBanner from '../../components/common/InterestsBanner';
+import InterestsModal from '../../components/common/InterestsModal';
 import {
   AcademicCapIcon,
   ClockIcon,
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
+  const [showInterestsModal, setShowInterestsModal] = useState(false);
   const [stats, setStats] = useState({
     totalCourses: 0,
     completedCourses: 0,
@@ -89,12 +92,22 @@ const Dashboard = () => {
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Interests Banner - Shows only if not completed */}
+        {!user?.interests?.hasCompletedInterests && (
+          <InterestsBanner 
+            onSetupClick={() => setShowInterestsModal(true)}
+            username={user?.username || user?.email?.split('@')[0]}
+          />
+        )}
+
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className={`text-3xl md:text-4xl font-bold mb-2 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            Welcome back, {user.name || user.username}! 👋
+            Welcome back, {user?.profile?.firstName && user?.profile?.lastName 
+              ? `${user.profile.firstName} ${user.profile.lastName}` 
+              : user?.profile?.firstName || user?.username}! 👋
           </h1>
           <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Continue your learning journey
@@ -525,6 +538,13 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Interests Modal */}
+      <InterestsModal
+        isOpen={showInterestsModal}
+        onClose={() => setShowInterestsModal(false)}
+        onComplete={() => setShowInterestsModal(false)}
+      />
 
       <Footer />
     </div>

@@ -65,5 +65,7 @@ router.put('/change-password-with-otp', authLimiter, authController.changePasswo
 router.post('/become-educator', authController.becomeEducator);
 router.post('/request-delete-account', authController.requestDeleteAccount);
 router.post('/cancel-delete-account', authController.cancelDeleteAccount);
+router.put('/interests', authController.updateInterests);
+router.get('/interests', authController.getInterests);
 
 module.exports = router;

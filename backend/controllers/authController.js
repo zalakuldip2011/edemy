@@ -1282,6 +1282,101 @@ const cancelDeleteAccount = async (req, res) => {
   }
 };
 
+// @desc    Update user interests
+// @route   PUT /api/auth/interests
+// @access  Private
+const updateInterests = async (req, res) => {
+  try {
+    console.log('📚 Update Interests Controller');
+    console.log('   User ID:', req.user?.id);
+    console.log('   Request body:', req.body);
+
+    const { categories, skillLevel, goals } = req.body;
+
+    // Validation
+    if (!categories || !Array.isArray(categories) || categories.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select at least one category'
+      });
+    }
+
+    if (categories.length > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'You can select maximum 10 categories'
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update interests
+    user.interests = {
+      categories: categories,
+      skillLevel: skillLevel || 'beginner',
+      goals: goals || [],
+      hasCompletedInterests: true,
+      lastUpdated: new Date()
+    };
+
+    await user.save();
+
+    console.log('   ✅ Interests updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Your interests have been saved successfully',
+      data: {
+        interests: user.interests
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Update interests error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update interests. Please try again.'
+    });
+  }
+};
+
+// @desc    Get user interests
+// @route   GET /api/auth/interests
+// @access  Private
+const getInterests = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('interests');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        interests: user.interests
+      }
+    });
+
+  } catch (error) {
+    console.error('Get interests error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch interests'
+    });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -1301,5 +1396,7 @@ module.exports = {
   requestPasswordChange,
   changePasswordWithOTP,
   requestDeleteAccount,
-  cancelDeleteAccount
+  cancelDeleteAccount,
+  updateInterests,
+  getInterests
 };

@@ -326,23 +326,27 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Quick Access */}
-        <div className="theme-card rounded-xl p-4">
-          <h3 className="text-sm font-medium theme-text-secondary mb-3">Quick Access</h3>
-          <div className="space-y-2 text-xs theme-text-tertiary">
-            <div className="flex justify-between">
-              <span>Demo Student:</span>
-              <span className="theme-text-accent">student@edemy.com or student123</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Demo Instructor:</span>
-              <span className="text-purple-400">instructor@edemy.com or instructor123</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Password:</span>
-              <span className="theme-text-secondary">Demo123!</span>
-            </div>
-          </div>
+        {/* Back to Home Link */}
+        <div className="text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center text-sm font-medium theme-text-accent hover:opacity-80 transition-opacity"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
+          </Link>
         </div>
       </div>
     </div>

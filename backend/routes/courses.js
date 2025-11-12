@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth, requireRole } = require('../middleware/auth');
+const { auth, requireRole, protect } = require('../middleware/auth');
 const {
   // Public endpoints
   getCourses,
@@ -9,6 +9,7 @@ const {
   getPopularTags,
   getCourseById,
   getCategories,
+  getPersonalizedCoursesForUser,
   
   // Instructor endpoints
   getInstructorCourses,
@@ -29,6 +30,9 @@ router.get('/categories', getCategories);
 router.get('/tags/popular', getPopularTags);
 router.get('/category/:category', getCoursesByCategory);
 router.get('/public/:id', getCourseById);
+
+// Protected routes (require authentication)
+router.get('/personalized', protect, getPersonalizedCoursesForUser);
 
 // Instructor course routes (require authentication and instructor role)
 router.get('/instructor/dashboard/stats', auth, requireRole('instructor'), getCourseStats);

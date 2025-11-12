@@ -949,6 +949,58 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+// @desc    Remove profile photo
+// @route   DELETE /api/auth/remove-avatar
+// @access  Private
+const removeAvatar = async (req, res) => {
+  try {
+    console.log('🗑️  Remove Avatar Controller');
+    console.log('   User ID:', req.user?.id);
+
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      console.error('   ❌ User not found');
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete avatar file if exists
+    if (user.profile.avatar) {
+      const avatarPath = path.join(__dirname, '..', user.profile.avatar);
+      if (fs.existsSync(avatarPath)) {
+        fs.unlinkSync(avatarPath);
+        console.log('   ✅ Avatar file deleted');
+      }
+    }
+
+    // Clear avatar path
+    user.profile.avatar = null;
+    await user.save();
+
+    console.log('   ✅ Avatar removed successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile photo removed successfully',
+      data: {
+        avatar: null
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Remove avatar error:', error);
+    console.error('   Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove profile photo',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // @desc    Update user name
 // @route   PUT /api/auth/update-name
 // @access  Private
@@ -1392,6 +1444,7 @@ module.exports = {
   checkAuth,
   becomeEducator,
   uploadAvatar,
+  removeAvatar,
   updateName,
   requestPasswordChange,
   changePasswordWithOTP,

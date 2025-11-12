@@ -11,13 +11,16 @@ import {
   MoonIcon,
   SunIcon,
   PencilIcon,
-  CameraIcon
+  CameraIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 const UserProfile = () => {
   const { user, updateProfile } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
+  const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -74,6 +77,85 @@ const UserProfile = () => {
     }
   };
 
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('http://localhost:5000/api/auth/upload-avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh user data to show new avatar
+        window.location.reload();
+      } else {
+        alert(data.message || 'Failed to upload avatar');
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      alert('Failed to upload avatar');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!confirm('Are you sure you want to remove your profile photo?')) {
+      return;
+    }
+
+    try {
+      setRemoving(true);
+      const response = await fetch('http://localhost:5000/api/auth/remove-avatar', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh user data to remove avatar
+        window.location.reload();
+      } else {
+        alert(data.message || 'Failed to remove avatar');
+      }
+    } catch (error) {
+      console.error('Remove avatar error:', error);
+      alert('Failed to remove avatar');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  // Check if user has avatar
+  const hasAvatar = user?.profile?.avatar && user.profile.avatar !== null && user.profile.avatar !== '';
+  console.log('User avatar status:', { hasAvatar, avatar: user?.profile?.avatar });
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode ? 'bg-slate-900' : 'bg-gray-50'
@@ -89,18 +171,51 @@ const UserProfile = () => {
         } p-8 mb-8`}>
           <div className="flex items-center space-x-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">
-                  {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
-                </span>
+              {hasAvatar ? (
+                <img 
+                  src={`http://localhost:5000${user.profile.avatar}`}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-purple-500"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                  </span>
+                </div>
+              )}
+              
+              <div className="absolute bottom-0 right-0 flex gap-1">
+                <label className={`p-2 rounded-full shadow-lg transition-colors cursor-pointer ${
+                  isDarkMode 
+                    ? 'bg-slate-700 text-white hover:bg-slate-600' 
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <CameraIcon className="h-4 w-4" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                  />
+                </label>
+                
+                {hasAvatar && (
+                  <button 
+                    onClick={handleRemoveAvatar}
+                    disabled={removing}
+                    className={`p-2 rounded-full shadow-lg transition-colors ${
+                      isDarkMode 
+                        ? 'bg-red-900/80 text-red-200 hover:bg-red-800' 
+                        : 'bg-red-50 text-red-600 hover:bg-red-100'
+                    } ${removing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title="Remove photo"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <button className={`absolute bottom-0 right-0 p-2 rounded-full shadow-lg transition-colors ${
-                isDarkMode 
-                  ? 'bg-slate-700 text-white hover:bg-slate-600' 
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}>
-                <CameraIcon className="h-4 w-4" />
-              </button>
             </div>
             
             <div className="flex-1">

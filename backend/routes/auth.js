@@ -59,6 +59,7 @@ router.get('/me', authController.getMe);
 router.put('/update-profile', authController.updateProfile);
 router.put('/update-name', authController.updateName);
 router.post('/upload-avatar', uploadAvatar, authController.uploadAvatar);
+router.delete('/remove-avatar', authController.removeAvatar);
 router.put('/change-password', validateChangePassword, handleValidationErrors, authController.changePassword);
 router.post('/request-password-change', authLimiter, authController.requestPasswordChange);
 router.put('/change-password-with-otp', authLimiter, authController.changePasswordWithOTP);

@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
-import Header from '../../components/layout/Header';
-import Footer from '../../components/layout/Footer';
 import {
   UserCircleIcon,
   CogIcon,
@@ -17,7 +15,16 @@ import {
   KeyIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  AcademicCapIcon,
+  BookOpenIcon,
+  ChartBarIcon,
+  ClockIcon,
+  TrophyIcon,
+  FireIcon,
+  CalendarIcon,
+  StarIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import InterestsModal from '../../components/common/InterestsModal';
@@ -66,8 +73,21 @@ const EnhancedUserProfile = () => {
   // Interests modal
   const [showInterestsModal, setShowInterestsModal] = useState(false);
 
+  // Learning statistics
+  const [learningStats, setLearningStats] = useState({
+    enrolledCourses: 0,
+    completedCourses: 0,
+    totalLearningHours: 0,
+    currentStreak: 0,
+    certificates: 0,
+    averageProgress: 0
+  });
+
   const tabs = [
+    { id: 'overview', name: 'Overview', icon: ChartBarIcon },
     { id: 'profile', name: 'Profile', icon: UserCircleIcon },
+    { id: 'learning', name: 'Learning Activity', icon: BookOpenIcon },
+    { id: 'achievements', name: 'Achievements', icon: TrophyIcon },
     { id: 'interests', name: 'Interests', icon: SparklesIcon },
     { id: 'settings', name: 'Settings', icon: CogIcon },
     { id: 'security', name: 'Security', icon: ShieldCheckIcon },
@@ -165,6 +185,47 @@ const EnhancedUserProfile = () => {
       console.error('❌ Avatar upload error:', err);
       console.error('   Response:', err.response?.data);
       error(err.response?.data?.message || 'Failed to upload photo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Remove avatar
+  const handleRemoveAvatar = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      console.log('🗑️  Removing avatar...');
+      
+      const response = await axios.delete(`${API_URL}/auth/remove-avatar`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('   Response:', response.data);
+
+      if (response.data.success) {
+        success('Profile photo removed successfully!');
+        // Update user context to remove avatar
+        const updatedUser = { 
+          ...user, 
+          profile: { 
+            ...user.profile, 
+            avatar: null
+          } 
+        };
+        updateUser(updatedUser);
+        setPreviewUrl(null);
+        console.log('   ✅ Avatar removed from state');
+      } else {
+        error(response.data.message || 'Failed to remove photo');
+      }
+    } catch (err) {
+      console.error('❌ Remove avatar error:', err);
+      console.error('   Response:', err.response?.data);
+      error(err.response?.data?.message || 'Failed to remove photo');
     } finally {
       setLoading(false);
     }
@@ -352,9 +413,26 @@ const EnhancedUserProfile = () => {
     <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode ? 'bg-slate-900' : 'bg-gray-50'
     }`}>
-      <Header />
+      {/* Back Button */}
+      <div className={`border-b transition-colors ${
+        isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate(-1)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              isDarkMode
+                ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            }`}
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+            <span className="font-medium">Back</span>
+          </button>
+        </div>
+      </div>
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Profile Header */}
         <div className={`rounded-xl shadow-lg border transition-colors duration-300 ${
           isDarkMode 
@@ -376,19 +454,35 @@ const EnhancedUserProfile = () => {
                   </span>
                 )}
               </div>
-              <label className={`absolute bottom-0 right-0 p-2 rounded-full shadow-lg cursor-pointer transition-colors ${
-                isDarkMode 
-                  ? 'bg-slate-700 text-white hover:bg-slate-600' 
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}>
-                <CameraIcon className="h-4 w-4" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </label>
+              <div className="absolute bottom-0 right-0 flex gap-1">
+                <label className={`p-2 rounded-full shadow-lg cursor-pointer transition-colors ${
+                  isDarkMode 
+                    ? 'bg-slate-700 text-white hover:bg-slate-600' 
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}>
+                  <CameraIcon className="h-4 w-4" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </label>
+                {(user?.profile?.avatar && !previewUrl) && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    disabled={loading}
+                    className={`p-2 rounded-full shadow-lg transition-colors ${
+                      isDarkMode 
+                        ? 'bg-red-900/80 text-red-200 hover:bg-red-800' 
+                        : 'bg-red-50 text-red-600 hover:bg-red-100'
+                    } ${ loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title="Remove photo"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
             
             <div className="flex-1">
@@ -409,14 +503,21 @@ const EnhancedUserProfile = () => {
               }`}>
                 {user?.email}
               </p>
-              <div className="mt-2">
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
                   isDarkMode
                     ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30'
                     : 'bg-purple-100 text-purple-700 border border-purple-300'
                 }`}>
                   {user?.role === 'instructor' ? '👨‍🏫 Instructor' : '🎓 Student'}
                 </span>
+                {user?.profile?.bio && (
+                  <span className={`text-sm ${
+                    isDarkMode ? 'text-slate-400' : 'text-gray-600'
+                  }`}>
+                    {user.profile.bio.substring(0, 100)}{user.profile.bio.length > 100 ? '...' : ''}
+                  </span>
+                )}
               </div>
             </div>
             
@@ -464,8 +565,225 @@ const EnhancedUserProfile = () => {
             </nav>
           </div>
 
-          {/* Main Content - Will continue in next part */}
+          {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className={`rounded-xl p-6 border transition-colors ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-700/50'
+                      : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <BookOpenIcon className={`h-8 w-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                      <span className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {learningStats.enrolledCourses}
+                      </span>
+                    </div>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                      Enrolled Courses
+                    </p>
+                  </div>
+
+                  <div className={`rounded-xl p-6 border transition-colors ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50'
+                      : 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <AcademicCapIcon className={`h-8 w-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                      <span className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {learningStats.completedCourses}
+                      </span>
+                    </div>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
+                      Completed Courses
+                    </p>
+                  </div>
+
+                  <div className={`rounded-xl p-6 border transition-colors ${
+                    isDarkMode
+                      ? 'bg-gradient-to-br from-orange-900/30 to-orange-800/20 border-orange-700/50'
+                      : 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <FireIcon className={`h-8 w-8 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`} />
+                      <span className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {learningStats.currentStreak}
+                      </span>
+                    </div>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-orange-300' : 'text-orange-700'}`}>
+                      Day Streak
+                    </p>
+                  </div>
+                </div>
+
+                {/* Learning Progress */}
+                <div className={`rounded-xl shadow-lg border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-slate-800/50 backdrop-blur-lg border-slate-700/50' 
+                    : 'bg-white border-gray-200'
+                } p-8`}>
+                  <h3 className={`text-xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Learning Progress
+                  </h3>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>Overall Progress</span>
+                        <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {learningStats.averageProgress}%
+                        </span>
+                      </div>
+                      <div className={`h-3 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-gray-200'}`}>
+                        <div 
+                          className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
+                          style={{ width: `${learningStats.averageProgress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-6">
+                      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                        <ClockIcon className={`h-6 w-6 mb-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                        <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {learningStats.totalLearningHours}h
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Total Learning Time</p>
+                      </div>
+                      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                        <TrophyIcon className={`h-6 w-6 mb-2 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                        <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {learningStats.certificates}
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Certificates Earned</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className={`rounded-xl shadow-lg border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-slate-800/50 backdrop-blur-lg border-slate-700/50' 
+                    : 'bg-white border-gray-200'
+                } p-8`}>
+                  <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Recent Activity
+                  </h3>
+                  <div className={`text-center py-12 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No recent activity to display</p>
+                    <p className="text-sm mt-2">Start learning to see your activity here</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Learning Activity Tab */}
+            {activeTab === 'learning' && (
+              <div className={`rounded-xl shadow-lg border transition-colors ${
+                isDarkMode 
+                  ? 'bg-slate-800/50 backdrop-blur-lg border-slate-700/50' 
+                  : 'bg-white border-gray-200'
+              } p-8`}>
+                <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Learning Activity
+                </h2>
+                <div className="space-y-6">
+                  <div className={`p-6 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-700/30 border-slate-600' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Weekly Learning Goals
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>Study Time Goal</span>
+                          <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>0/10 hours</span>
+                        </div>
+                        <div className={`h-2 rounded-full ${isDarkMode ? 'bg-slate-600' : 'bg-gray-200'}`}>
+                          <div className="h-full bg-purple-500 rounded-full" style={{ width: '0%' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>Courses Completed</span>
+                          <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>0/3 courses</span>
+                        </div>
+                        <div className={`h-2 rounded-full ${isDarkMode ? 'bg-slate-600' : 'bg-gray-200'}`}>
+                          <div className="h-full bg-green-500 rounded-full" style={{ width: '0%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`text-center py-12 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    <BookOpenIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No learning activity yet</p>
+                    <p className="text-sm mt-2">Enroll in courses and start your learning journey!</p>
+                    <button
+                      onClick={() => navigate('/courses')}
+                      className="mt-6 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                    >
+                      Browse Courses
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Achievements Tab */}
+            {activeTab === 'achievements' && (
+              <div className={`rounded-xl shadow-lg border transition-colors ${
+                isDarkMode 
+                  ? 'bg-slate-800/50 backdrop-blur-lg border-slate-700/50' 
+                  : 'bg-white border-gray-200'
+              } p-8`}>
+                <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Achievements & Badges
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  {/* Achievement Cards - Placeholder */}
+                  {[
+                    { name: 'First Course', icon: '🎓', locked: true },
+                    { name: 'Fast Learner', icon: '⚡', locked: true },
+                    { name: 'Week Warrior', icon: '🔥', locked: true },
+                    { name: 'Course Master', icon: '👑', locked: true },
+                    { name: 'Perfect Score', icon: '💯', locked: true },
+                    { name: 'Dedicated Student', icon: '📚', locked: true }
+                  ].map((achievement, index) => (
+                    <div
+                      key={index}
+                      className={`relative p-6 rounded-xl border text-center transition-all ${
+                        achievement.locked
+                          ? isDarkMode
+                            ? 'bg-slate-700/30 border-slate-600 opacity-50'
+                            : 'bg-gray-50 border-gray-200 opacity-50'
+                          : isDarkMode
+                            ? 'bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-700/50'
+                            : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
+                      }`}
+                    >
+                      <div className="text-5xl mb-3">{achievement.icon}</div>
+                      <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {achievement.name}
+                      </h4>
+                      {achievement.locked && (
+                        <p className={`text-xs mt-2 ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                          🔒 Locked
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className={`rounded-xl shadow-lg border transition-colors duration-300 ${
@@ -1191,8 +1509,6 @@ const EnhancedUserProfile = () => {
           success('Your interests have been updated successfully!');
         }}
       />
-      
-      <Footer />
     </div>
   );
 };

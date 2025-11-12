@@ -20,9 +20,11 @@ import {
   DocumentTextIcon,
   UserCircleIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  HeartIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
+import { StarIcon as StarSolid, HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -39,6 +41,10 @@ const CourseDetails = () => {
   const [showLectureModal, setShowLectureModal] = useState(false);
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     fetchCourseDetails();
@@ -137,6 +143,73 @@ const CourseDetails = () => {
       alert('Failed to enroll in course');
     } finally {
       setEnrolling(false);
+    }
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setTogglingWishlist(true);
+      const token = localStorage.getItem('token');
+
+      if (isInWishlist) {
+        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wishlist/${courseId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setIsInWishlist(false);
+      } else {
+        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wishlist`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ courseId })
+        });
+        setIsInWishlist(true);
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      alert('Failed to update wishlist');
+    } finally {
+      setTogglingWishlist(false);
+    }
+  };
+
+  const addToCart = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cart`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ courseId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsInCart(true);
+        alert('Course added to cart!');
+      } else {
+        alert(data.message || 'Failed to add to cart');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add to cart');
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -340,13 +413,62 @@ const CourseDetails = () => {
                         Continue Learning
                       </Link>
                     ) : (
-                      <button
-                        onClick={handleEnroll}
-                        disabled={enrolling}
-                        className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {enrolling ? 'Enrolling...' : 'Enroll Now'}
-                      </button>
+                      <div className="space-y-3">
+                        {/* Wishlist Button */}
+                        <button
+                          onClick={toggleWishlist}
+                          disabled={togglingWishlist}
+                          className={`w-full py-3 px-6 border-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${\n                            isDarkMode\n                              ? 'border-slate-600 text-slate-300 hover:bg-slate-700'\n                              : 'border-gray-300 text-gray-700 hover:bg-gray-50'\n                          } disabled:opacity-50`}
+                        >
+                          {isInWishlist ? (
+                            <><HeartSolid className="h-5 w-5 text-red-500" /> Remove from Wishlist</>
+                          ) : (
+                            <><HeartIcon className="h-5 w-5" /> Add to Wishlist</>
+                          )}
+                        </button>
+
+                        {course.price > 0 ? (
+                          <>
+                            {/* Add to Cart Button */}
+                            {!isInCart ? (
+                              <button
+                                onClick={addToCart}
+                                disabled={addingToCart}
+                                className={`w-full py-3 px-6 border-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${\n                                  isDarkMode\n                                    ? 'border-purple-500 text-purple-300 hover:bg-purple-500/20'\n                                    : 'border-purple-600 text-purple-600 hover:bg-purple-50'\n                                } disabled:opacity-50`}
+                              >
+                                {addingToCart ? (
+                                  <ShoppingCartIcon className="h-5 w-5 animate-pulse" />
+                                ) : (
+                                  <><ShoppingCartIcon className="h-5 w-5" /> Add to Cart</>
+                                )}
+                              </button>
+                            ) : (
+                              <Link
+                                to="/cart"
+                                className="block w-full py-3 px-6 text-center bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all"
+                              >
+                                Go to Cart
+                              </Link>
+                            )}
+                            {/* Buy Now Button */}
+                            <button
+                              onClick={handleEnroll}
+                              disabled={enrolling}
+                              className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {enrolling ? 'Processing...' : 'Buy Now'}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={handleEnroll}
+                            disabled={enrolling}
+                            className="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {enrolling ? 'Enrolling...' : 'Enroll Free'}
+                          </button>
+                        )}
+                      </div>
                     )}
 
                     <div className={`mt-6 pt-6 border-t space-y-3 ${

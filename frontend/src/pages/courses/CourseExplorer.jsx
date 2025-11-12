@@ -12,9 +12,11 @@ import {
   XMarkIcon,
   Squares2X2Icon,
   ListBulletIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  HeartIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
+import { StarIcon as StarSolid, HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/layout/Header';
@@ -23,7 +25,7 @@ import SkeletonLoader from '../../components/common/SkeletonLoader';
 
 const CourseExplorer = () => {
   const { isDarkMode } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -31,6 +33,10 @@ const CourseExplorer = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [searchInput, setSearchInput] = useState(''); // For immediate UI update
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
+  const [addingToCart, setAddingToCart] = useState({});
+  const [togglingWishlist, setTogglingWishlist] = useState({});
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -140,7 +146,115 @@ const CourseExplorer = () => {
   // Fetch courses when filters change
   useEffect(() => {
     fetchCourses(1);
-  }, [filters]);
+    if (isAuthenticated) {
+      fetchWishlist();
+      fetchCart();
+    }
+  }, [filters, isAuthenticated]);
+
+  const fetchWishlist = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wishlist`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setWishlistItems(data.data.wishlist.courses.map(c => c._id || c));
+      }
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+    }
+  };
+
+  const fetchCart = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cart`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setCartItems(data.data.cart.courses.map(c => c._id || c));
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
+
+  const toggleWishlist = async (courseId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setTogglingWishlist(prev => ({ ...prev, [courseId]: true }));
+      const token = localStorage.getItem('token');
+      const isInWishlist = wishlistItems.includes(courseId);
+
+      if (isInWishlist) {
+        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wishlist/${courseId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setWishlistItems(prev => prev.filter(id => id !== courseId));
+      } else {
+        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wishlist`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ courseId })
+        });
+        setWishlistItems(prev => [...prev, courseId]);
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      alert('Failed to update wishlist');
+    } finally {
+      setTogglingWishlist(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const addToCart = async (courseId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setAddingToCart(prev => ({ ...prev, [courseId]: true }));
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/cart`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ courseId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setCartItems(prev => [...prev, courseId]);
+        alert('Course added to cart!');
+      } else {
+        alert(data.message || 'Failed to add to cart');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add to cart');
+    } finally {
+      setAddingToCart(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -539,9 +653,7 @@ const CourseExplorer = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <Link 
-                      to={`/courses/${course._id}`}
-                      className={`block backdrop-blur-lg rounded-xl shadow-lg border transition-all duration-300 group ${
+                    <div className={`relative backdrop-blur-lg rounded-xl shadow-lg border transition-all duration-300 group ${
                         isDarkMode
                           ? 'bg-slate-800/50 border-slate-700/50 hover:shadow-2xl hover:border-slate-600/50'
                           : 'bg-white border-gray-200 hover:shadow-2xl hover:border-gray-300'
@@ -550,6 +662,10 @@ const CourseExplorer = () => {
                           ? 'transform hover:scale-105'
                           : `flex gap-6 ${isDarkMode ? 'hover:bg-slate-800/70' : 'hover:bg-gray-50'}`
                       }`}
+                    >
+                    <Link 
+                      to={`/courses/${course._id}`}
+                      className="block"
                     >
                     {/* Course Image */}
                     <div className={`flex items-center justify-center relative overflow-hidden ${
@@ -579,7 +695,26 @@ const CourseExplorer = () => {
                           </span>
                         </>
                       )}
+                      {/* Wishlist Heart Button */}
+                      <button
+                        onClick={(e) => toggleWishlist(course._id, e)}
+                        disabled={togglingWishlist[course._id]}
+                        className={`absolute top-3 right-3 p-2 rounded-full transition-all z-10 ${
+                          isDarkMode
+                            ? 'bg-slate-800/80 hover:bg-slate-700'
+                            : 'bg-white/90 hover:bg-white'
+                        } backdrop-blur-sm shadow-lg`}
+                      >
+                        {wishlistItems.includes(course._id) ? (
+                          <HeartSolid className="h-6 w-6 text-red-500" />
+                        ) : (
+                          <HeartIcon className={`h-6 w-6 ${
+                            isDarkMode ? 'text-white' : 'text-gray-700'
+                          }`} />
+                        )}
+                      </button>
                     </div>
+                    </Link>
 
                     <div className={`p-6 ${viewMode === 'list' ? 'flex-1' : ''}`}>
                       {/* Category Badge */}
@@ -659,23 +794,67 @@ const CourseExplorer = () => {
                         )}
                       </div>
 
-                      {/* Price */}
-                      <div className={`flex items-center justify-between ${
+                      {/* Price and Action Buttons */}
+                      <div className={`${
                         viewMode === 'grid' 
                           ? `pt-4 border-t ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'}` 
                           : ''
                       }`}>
-                        <span className={`text-2xl font-bold ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>
-                          {formatPrice(course.price)}
-                        </span>
-                        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-                          Enroll
-                        </button>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className={`text-2xl font-bold ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {formatPrice(course.price)}
+                          </span>
+                        </div>
+                        
+                        {course.price > 0 ? (
+                          <div className="flex gap-2">
+                            {!cartItems.includes(course._id) ? (
+                              <button
+                                onClick={(e) => addToCart(course._id, e)}
+                                disabled={addingToCart[course._id]}
+                                className={`flex-1 px-4 py-2 border-2 rounded-lg font-semibold transition-all duration-300 ${
+                                  isDarkMode
+                                    ? 'border-purple-500 text-purple-300 hover:bg-purple-500/20'
+                                    : 'border-purple-600 text-purple-600 hover:bg-purple-50'
+                                } disabled:opacity-50`}
+                              >
+                                {addingToCart[course._id] ? (
+                                  <ShoppingCartIcon className="h-5 w-5 mx-auto animate-pulse" />
+                                ) : (
+                                  'Add to Cart'
+                                )}
+                              </button>
+                            ) : (
+                              <Link
+                                to="/cart"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold text-center hover:bg-green-700 transition-all"
+                              >
+                                Go to Cart
+                              </Link>
+                            )}
+                            <Link
+                              to={`/courses/${course._id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold text-center hover:shadow-lg transition-all duration-300"
+                            >
+                              Buy Now
+                            </Link>
+                          </div>
+                        ) : (
+                          <Link
+                            to={`/courses/${course._id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="block w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold text-center hover:shadow-lg transition-all duration-300"
+                          >
+                            Enroll Free
+                          </Link>
+                        )}
                       </div>
                     </div>
-                  </Link>
+                  </div>
                   </motion.div>
                 ))}
               </div>

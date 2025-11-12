@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Header from '../../components/layout/Header';
@@ -14,7 +15,12 @@ import {
   GlobeAltIcon,
   AcademicCapIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  XMarkIcon,
+  DocumentTextIcon,
+  UserCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 
@@ -25,10 +31,14 @@ const CourseDetails = () => {
   const { isDarkMode } = useTheme();
   
   const [course, setCourse] = useState(null);
+  const [relatedCourses, setRelatedCourses] = useState([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [showLectureModal, setShowLectureModal] = useState(false);
+  const [selectedLecture, setSelectedLecture] = useState(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
     fetchCourseDetails();
@@ -46,16 +56,41 @@ const CourseDetails = () => {
         throw new Error('Course not found');
       }
       
-      setCourse(courseData.data);
+      setCourse(courseData.data.course);
+      
+      // Fetch related courses (same category, limit 6)
+      if (courseData.data.course.category) {
+        const relatedRes = await fetch(
+          `/api/courses?category=${courseData.data.course.category}&limit=6`
+        );
+        const relatedData = await relatedRes.json();
+        
+        if (relatedData.success) {
+          // Filter out current course from related courses
+          const filtered = relatedData.data.courses.filter(
+            c => c._id !== courseId
+          );
+          setRelatedCourses(filtered.slice(0, 4)); // Show max 4 related courses
+        }
+      }
       
       // Check enrollment status if user is logged in
       if (user && user.role === 'student') {
-        const enrollmentRes = await fetch(`/api/enrollments/course/${courseId}`, {
+        const enrollmentRes = await fetch(`/api/enrollments`, {
           credentials: 'include'
         });
-        const enrollmentData = await enrollmentRes.json();
         
-        setIsEnrolled(enrollmentData.success && enrollmentData.data);
+        if (enrollmentRes.ok) {
+          const enrollmentData = await enrollmentRes.json();
+          
+          if (enrollmentData.success && enrollmentData.enrollments) {
+            // Check if user is enrolled in this course
+            const enrolled = enrollmentData.enrollments.some(
+              e => (e.course._id || e.course) === courseId
+            );
+            setIsEnrolled(enrolled);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching course:', error);
@@ -93,7 +128,7 @@ const CourseDetails = () => {
       if (data.success) {
         setIsEnrolled(true);
         alert('Successfully enrolled! Redirecting to course...');
-        navigate(`/courses/${courseId}/learn`);
+        navigate(`/learn/${courseId}`);
       } else {
         alert(data.message || 'Failed to enroll in course');
       }
@@ -106,10 +141,14 @@ const CourseDetails = () => {
   };
 
   const toggleSection = (index) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
+    setExpandedSections(prev => {
+      // ✅ SAFE: Validate prev before spreading
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [index]: !safePrev[index]
+      };
+    });
   };
 
   const formatDuration = (seconds) => {
@@ -117,6 +156,28 @@ const CourseDetails = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
+  };
+
+  const openLectureModal = (lecture) => {
+    setSelectedLecture(lecture);
+    setShowLectureModal(true);
+  };
+
+  const closeLectureModal = () => {
+    setShowLectureModal(false);
+    setSelectedLecture(null);
+  };
+
+  const nextCourse = () => {
+    setCarouselIndex((prev) => 
+      prev === relatedCourses.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevCourse = () => {
+    setCarouselIndex((prev) => 
+      prev === 0 ? relatedCourses.length - 1 : prev - 1
+    );
   };
 
   if (loading) {
@@ -273,7 +334,7 @@ const CourseDetails = () => {
 
                     {isEnrolled ? (
                       <Link
-                        to={`/courses/${courseId}/learn`}
+                        to={`/learn/${courseId}`}
                         className="block w-full py-3 px-6 text-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all"
                       >
                         Continue Learning
@@ -419,28 +480,38 @@ const CourseDetails = () => {
                           isDarkMode ? 'border-slate-700 bg-slate-700/20' : 'border-gray-200 bg-gray-50'
                         }`}>
                           {section.lectures.map((lecture) => (
-                            <div 
+                            <button
                               key={lecture._id}
-                              className={`py-3 flex items-center justify-between ${
-                                isDarkMode ? 'border-slate-600' : 'border-gray-200'
+                              onClick={() => openLectureModal(lecture)}
+                              className={`w-full py-3 flex items-center justify-between hover:bg-opacity-50 transition-all duration-200 ${
+                                isDarkMode ? 'hover:bg-slate-600/30' : 'hover:bg-gray-100'
                               }`}
                             >
                               <div className="flex items-center">
                                 <PlayIcon className={`h-4 w-4 mr-3 ${
                                   isDarkMode ? 'text-slate-400' : 'text-gray-400'
                                 }`} />
-                                <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>
+                                <span className={`text-left ${
+                                  isDarkMode ? 'text-slate-300' : 'text-gray-700'
+                                }`}>
                                   {lecture.title}
                                 </span>
                               </div>
-                              {lecture.duration > 0 && (
-                                <span className={`text-sm ${
-                                  isDarkMode ? 'text-slate-500' : 'text-gray-500'
-                                }`}>
-                                  {Math.floor(lecture.duration / 60)}:{(lecture.duration % 60).toString().padStart(2, '0')}
-                                </span>
-                              )}
-                            </div>
+                              <div className="flex items-center gap-3">
+                                {lecture.isFree && (
+                                  <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full font-medium">
+                                    Preview
+                                  </span>
+                                )}
+                                {lecture.duration > 0 && (
+                                  <span className={`text-sm ${
+                                    isDarkMode ? 'text-slate-500' : 'text-gray-500'
+                                  }`}>
+                                    {Math.floor(lecture.duration / 60)}:{(lecture.duration % 60).toString().padStart(2, '0')}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -473,6 +544,219 @@ const CourseDetails = () => {
                     ))}
                   </ul>
                 </div>
+              )}
+
+              {/* Instructor Bio */}
+              {course.instructor && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className={`rounded-xl shadow-lg p-6 ${
+                    isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-white'
+                  }`}
+                >
+                  <h2 className={`text-2xl font-bold mb-6 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Instructor
+                  </h2>
+                  <div className="flex items-start gap-6">
+                    <div className="flex-shrink-0">
+                      {course.instructor.avatar ? (
+                        <img
+                          src={course.instructor.avatar}
+                          alt={course.instructor.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-purple-500"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-4 border-purple-500">
+                          <UserCircleIcon className="w-16 h-16 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`text-xl font-bold mb-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {course.instructor.name}
+                      </h3>
+                      {course.instructor.title && (
+                        <p className={`text-sm mb-3 ${
+                          isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                        }`}>
+                          {course.instructor.title}
+                        </p>
+                      )}
+                      {course.instructor.bio && (
+                        <p className={`mb-4 ${
+                          isDarkMode ? 'text-slate-300' : 'text-gray-700'
+                        }`}>
+                          {course.instructor.bio}
+                        </p>
+                      )}
+                      {course.instructor.email && (
+                        <p className={`text-sm ${
+                          isDarkMode ? 'text-slate-400' : 'text-gray-600'
+                        }`}>
+                          Contact: {course.instructor.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Related Courses */}
+              {relatedCourses.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className={`rounded-xl shadow-lg p-6 ${
+                    isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-white'
+                  }`}
+                >
+                  <h2 className={`text-2xl font-bold mb-6 ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Related Courses
+                  </h2>
+                  
+                  {/* Carousel */}
+                  <div className="relative">
+                    {relatedCourses.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevCourse}
+                          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode 
+                              ? 'bg-slate-700 hover:bg-slate-600 text-white' 
+                              : 'bg-white hover:bg-gray-50 text-gray-900'
+                          }`}
+                          aria-label="Previous course"
+                        >
+                          <ChevronLeftIcon className="h-6 w-6" />
+                        </button>
+                        <button
+                          onClick={nextCourse}
+                          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+                            isDarkMode 
+                              ? 'bg-slate-700 hover:bg-slate-600 text-white' 
+                              : 'bg-white hover:bg-gray-50 text-gray-900'
+                          }`}
+                          aria-label="Next course"
+                        >
+                          <ChevronRightIcon className="h-6 w-6" />
+                        </button>
+                      </>
+                    )}
+                    
+                    <div className="overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={carouselIndex}
+                          initial={{ opacity: 0, x: 100 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -100 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Link
+                            to={`/courses/${relatedCourses[carouselIndex]._id}`}
+                            className={`block rounded-lg border transition-all duration-200 hover:shadow-xl ${
+                              isDarkMode 
+                                ? 'border-slate-700 hover:border-purple-500' 
+                                : 'border-gray-200 hover:border-purple-400'
+                            }`}
+                          >
+                            <div className="flex flex-col md:flex-row gap-4">
+                              {/* Course Thumbnail */}
+                              <div className="md:w-1/3 flex-shrink-0">
+                                {relatedCourses[carouselIndex].thumbnail ? (
+                                  <img
+                                    src={relatedCourses[carouselIndex].thumbnail}
+                                    alt={relatedCourses[carouselIndex].title}
+                                    className="w-full h-48 md:h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
+                                  />
+                                ) : (
+                                  <div className="w-full h-48 md:h-full bg-gradient-to-br from-purple-600 to-pink-600 rounded-t-lg md:rounded-l-lg md:rounded-tr-none flex items-center justify-center">
+                                    <span className="text-white text-4xl font-bold">
+                                      {relatedCourses[carouselIndex].title?.charAt(0) || 'C'}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Course Info */}
+                              <div className="flex-1 p-4">
+                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 ${
+                                  isDarkMode 
+                                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30' 
+                                    : 'bg-purple-100 text-purple-700'
+                                }`}>
+                                  {relatedCourses[carouselIndex].category}
+                                </span>
+                                <h3 className={`text-xl font-bold mb-2 ${
+                                  isDarkMode ? 'text-white' : 'text-gray-900'
+                                }`}>
+                                  {relatedCourses[carouselIndex].title}
+                                </h3>
+                                <p className={`text-sm mb-3 line-clamp-2 ${
+                                  isDarkMode ? 'text-slate-400' : 'text-gray-600'
+                                }`}>
+                                  {relatedCourses[carouselIndex].description}
+                                </p>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <div className="flex items-center gap-1">
+                                    <StarSolid className="h-4 w-4 text-yellow-400" />
+                                    <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>
+                                      {relatedCourses[carouselIndex].averageRating || 0}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <UsersIcon className={`h-4 w-4 ${
+                                      isDarkMode ? 'text-slate-400' : 'text-gray-500'
+                                    }`} />
+                                    <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>
+                                      {relatedCourses[carouselIndex].enrollmentCount || 0} students
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="mt-4">
+                                  <span className={`text-2xl font-bold ${
+                                    isDarkMode ? 'text-white' : 'text-gray-900'
+                                  }`}>
+                                    {relatedCourses[carouselIndex].price === 0 
+                                      ? 'Free' 
+                                      : `$${relatedCourses[carouselIndex].price}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                    
+                    {/* Carousel Indicators */}
+                    {relatedCourses.length > 1 && (
+                      <div className="flex justify-center gap-2 mt-4">
+                        {relatedCourses.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setCarouselIndex(index)}
+                            className={`h-2 rounded-full transition-all duration-200 ${
+                              index === carouselIndex
+                                ? 'w-8 bg-purple-600'
+                                : 'w-2 bg-slate-400 hover:bg-slate-500'
+                            }`}
+                            aria-label={`Go to course ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
               )}
             </div>
 
@@ -525,6 +809,141 @@ const CourseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Lecture Preview Modal */}
+      <AnimatePresence>
+        {showLectureModal && selectedLecture && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeLectureModal}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            />
+            
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className={`relative w-full max-w-2xl rounded-2xl shadow-2xl ${
+                isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+              }`}>
+                {/* Close Button */}
+                <button
+                  onClick={closeLectureModal}
+                  className={`absolute -top-4 -right-4 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10 ${
+                    isDarkMode 
+                      ? 'bg-slate-700 hover:bg-slate-600 text-white' 
+                      : 'bg-white hover:bg-gray-50 text-gray-900'
+                  }`}
+                  aria-label="Close modal"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+
+                {/* Modal Content */}
+                <div className="p-8">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600">
+                      <PlayIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`text-2xl font-bold mb-2 ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {selectedLecture.title}
+                      </h3>
+                      {selectedLecture.duration > 0 && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <ClockIcon className={`h-4 w-4 ${
+                            isDarkMode ? 'text-slate-400' : 'text-gray-500'
+                          }`} />
+                          <span className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>
+                            {Math.floor(selectedLecture.duration / 60)}:{(selectedLecture.duration % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedLecture.description && (
+                    <div className="mb-6">
+                      <h4 className={`text-sm font-semibold mb-2 uppercase tracking-wide ${
+                        isDarkMode ? 'text-slate-400' : 'text-gray-500'
+                      }`}>
+                        Description
+                      </h4>
+                      <p className={`${
+                        isDarkMode ? 'text-slate-300' : 'text-gray-700'
+                      }`}>
+                        {selectedLecture.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedLecture.resources && selectedLecture.resources.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className={`text-sm font-semibold mb-3 uppercase tracking-wide ${
+                        isDarkMode ? 'text-slate-400' : 'text-gray-500'
+                      }`}>
+                        Resources
+                      </h4>
+                      <div className="space-y-2">
+                        {selectedLecture.resources.map((resource, index) => (
+                          <div 
+                            key={index}
+                            className={`flex items-center gap-3 p-3 rounded-lg ${
+                              isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'
+                            }`}
+                          >
+                            <DocumentTextIcon className={`h-5 w-5 ${
+                              isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                            }`} />
+                            <span className={isDarkMode ? 'text-slate-300' : 'text-gray-700'}>
+                              {resource.title || `Resource ${index + 1}`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!isEnrolled && (
+                    <div className={`p-4 rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-purple-600/10 border-purple-500/30' 
+                        : 'bg-purple-50 border-purple-200'
+                    }`}>
+                      <p className={`text-sm ${
+                        isDarkMode ? 'text-purple-300' : 'text-purple-700'
+                      }`}>
+                        {selectedLecture.isFree 
+                          ? '✨ This is a free preview lecture. Enroll to access all lectures!'
+                          : '🔒 Enroll in this course to access this lecture and all other course content.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {isEnrolled && (
+                    <button
+                      onClick={() => navigate(`/learn/${courseId}`)}
+                      className="w-full mt-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                    >
+                      Go to Course Player
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <Footer />
     </>
   );

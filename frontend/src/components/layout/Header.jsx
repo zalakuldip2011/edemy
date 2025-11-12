@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ChevronDownIcon, 
   MagnifyingGlassIcon, 
@@ -21,6 +21,38 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Refs for managing hover delays
+  const dropdownTimerRef = useRef(null);
+  const userMenuTimerRef = useRef(null);
+
+  // Handle category dropdown hover with delay
+  const handleDropdownEnter = () => {
+    if (dropdownTimerRef.current) {
+      clearTimeout(dropdownTimerRef.current);
+    }
+    setIsDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimerRef.current = setTimeout(() => {
+      setIsDropdownOpen(false);
+    }, 200); // 200ms delay before closing
+  };
+
+  // Handle user menu hover with delay
+  const handleUserMenuEnter = () => {
+    if (userMenuTimerRef.current) {
+      clearTimeout(userMenuTimerRef.current);
+    }
+    setIsUserMenuOpen(true);
+  };
+
+  const handleUserMenuLeave = () => {
+    userMenuTimerRef.current = setTimeout(() => {
+      setIsUserMenuOpen(false);
+    }, 200); // 200ms delay before closing
+  };
 
   const handleLogout = async () => {
     try {
@@ -85,8 +117,8 @@ const Header = () => {
           <div className="hidden lg:flex items-center space-x-6 flex-1 max-w-3xl mx-8">
             {/* Categories Dropdown */}
             <div className="relative"
-                 onMouseEnter={() => setIsDropdownOpen(true)}
-                 onMouseLeave={() => setIsDropdownOpen(false)}>
+                 onMouseEnter={handleDropdownEnter}
+                 onMouseLeave={handleDropdownLeave}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className={`group flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md ${
@@ -110,6 +142,11 @@ const Header = () => {
                       <a
                         key={index}
                         href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/courses?category=${encodeURIComponent(category)}`);
+                          setIsDropdownOpen(false);
+                        }}
                         className={`block px-4 py-3 text-sm transition-all duration-150 border-l-4 border-transparent ${
                           isDarkMode
                             ? 'text-slate-300 hover:text-white hover:bg-slate-700/70 hover:border-blue-500'
@@ -215,8 +252,8 @@ const Header = () => {
             {isAuthenticated ? (
               /* User Menu */
               <div className="relative"
-                   onMouseEnter={() => setIsUserMenuOpen(true)}
-                   onMouseLeave={() => setIsUserMenuOpen(false)}>
+                   onMouseEnter={handleUserMenuEnter}
+                   onMouseLeave={handleUserMenuLeave}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className={`flex items-center space-x-3 p-2 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md ${

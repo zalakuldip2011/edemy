@@ -50,7 +50,9 @@ const VerifyResetOTP = () => {
   const handleChange = (index, value) => {
     if (value.length > 1) return; // Prevent multiple characters
     
-    const newOtp = [...otp];
+    // ✅ SAFE: Validate array before spreading
+    const safeOtp = Array.isArray(otp) ? otp : ['', '', '', '', '', ''];
+    const newOtp = [...safeOtp];
     newOtp[index] = value;
     setOtp(newOtp);
     setError(''); // Clear error when user types
@@ -63,7 +65,8 @@ const VerifyResetOTP = () => {
 
   const handleKeyDown = (index, e) => {
     // Handle backspace
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    const safeOtp = Array.isArray(otp) ? otp : ['', '', '', '', '', ''];
+    if (e.key === 'Backspace' && !safeOtp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
     
@@ -72,7 +75,9 @@ const VerifyResetOTP = () => {
       e.preventDefault();
       navigator.clipboard.readText().then(text => {
         const pastedOtp = text.replace(/\D/g, '').slice(0, 6).split('');
-        const newOtp = [...otp];
+        // ✅ SAFE: Validate array before spreading
+        const safeOtp = Array.isArray(otp) ? otp : ['', '', '', '', '', ''];
+        const newOtp = [...safeOtp];
         pastedOtp.forEach((digit, i) => {
           if (i < 6) newOtp[i] = digit;
         });

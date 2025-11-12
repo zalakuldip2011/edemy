@@ -53,13 +53,21 @@ const ExampleNewPage = () => {
                 type="text"
                 placeholder="Your name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => {
+                  // ✅ SAFE: Validate formData before spreading
+                  const safeData = formData && typeof formData === 'object' ? formData : {};
+                  setFormData({...safeData, name: e.target.value});
+                }}
               />
               <ThemeInput
                 type="email"
                 placeholder="Your email"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => {
+                  // ✅ SAFE: Validate formData before spreading
+                  const safeData = formData && typeof formData === 'object' ? formData : {};
+                  setFormData({...safeData, email: e.target.value});
+                }}
               />
               <div className="flex space-x-3">
                 <ThemeButton type="submit">

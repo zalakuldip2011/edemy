@@ -311,6 +311,28 @@ courseSchema.index({
   tags: 'text'
 });
 
+// Compound indexes for common filter combinations
+// Category + Level + Published (for filtered browsing)
+courseSchema.index({ isPublished: 1, category: 1, level: 1 });
+
+// Category + Rating (for featured/top courses)
+courseSchema.index({ isPublished: 1, category: 1, averageRating: -1 });
+
+// Price range filtering + Published
+courseSchema.index({ isPublished: 1, price: 1 });
+
+// Instructor's published courses sorted by creation
+courseSchema.index({ instructor: 1, isPublished: 1, createdAt: -1 });
+
+// Popular courses (enrollment + rating)
+courseSchema.index({ isPublished: 1, totalEnrollments: -1, averageRating: -1 });
+
+// Featured courses with good ratings
+courseSchema.index({ isPublished: 1, featured: 1, averageRating: -1 });
+
+// Newest courses
+courseSchema.index({ isPublished: 1, createdAt: -1 });
+
 // Virtual for course URL/slug
 courseSchema.virtual('slug').get(function() {
   return this.title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
@@ -329,19 +351,25 @@ courseSchema.methods.calculateTotals = function() {
   let totalDuration = 0;
   let totalLectures = 0;
 
-  this.sections.forEach(section => {
-    section.lectures.forEach(lecture => {
-      totalDuration += lecture.duration || 0;
-      totalLectures += 1;
+  // Safely handle sections array
+  if (this.sections && Array.isArray(this.sections)) {
+    this.sections.forEach(section => {
+      if (section.lectures && Array.isArray(section.lectures)) {
+        section.lectures.forEach(lecture => {
+          totalDuration += lecture.duration || 0;
+          totalLectures += 1;
+        });
+      }
     });
-  });
+  }
 
   this.totalDuration = totalDuration;
   this.totalLectures = totalLectures;
 };
 
 courseSchema.methods.calculateAverageRating = function() {
-  if (this.reviews.length === 0) {
+  // Safely handle reviews array
+  if (!this.reviews || !Array.isArray(this.reviews) || this.reviews.length === 0) {
     this.averageRating = 0;
     this.totalReviews = 0;
     return;
@@ -407,43 +435,120 @@ courseSchema.statics.getCoursesByCategory = async function(category, limit = 10)
 };
 
 courseSchema.statics.searchCourses = async function(query, filters = {}) {
-  const searchQuery = {
-    isPublished: true,
-    ...(query && { $text: { $search: query } }),
-    ...(filters.category && { category: filters.category }),
-    ...(filters.level && { level: filters.level }),
-    ...(filters.minPrice !== undefined && { price: { $gte: filters.minPrice } }),
-    ...(filters.maxPrice !== undefined && { price: { $lte: filters.maxPrice } }),
-    ...(filters.rating && { averageRating: { $gte: filters.rating } }),
-    ...(filters.tags && { tags: { $in: filters.tags } })
+  // Build match stage for aggregation pipeline
+  const matchStage = {
+    isPublished: true
   };
 
-  let sortQuery = {};
-  switch (filters.sortBy) {
-    case 'popular':
-      sortQuery = { totalEnrollments: -1 };
-      break;
-    case 'rating':
-      sortQuery = { averageRating: -1 };
-      break;
-    case 'newest':
-      sortQuery = { createdAt: -1 };
-      break;
-    case 'price_low':
-      sortQuery = { price: 1 };
-      break;
-    case 'price_high':
-      sortQuery = { price: -1 };
-      break;
-    default:
-      sortQuery = query ? { score: { $meta: 'textScore' } } : { averageRating: -1 };
+  // Add text search if query provided
+  if (query) {
+    matchStage.$text = { $search: query };
   }
 
-  return this.find(searchQuery)
-    .populate('instructor', 'name profilePicture')
-    .sort(sortQuery)
-    .limit(filters.limit || 20)
-    .skip(filters.skip || 0);
+  // Add category filter
+  if (filters.category) {
+    matchStage.category = filters.category;
+  }
+
+  // Add level filter
+  if (filters.level) {
+    matchStage.level = filters.level;
+  }
+
+  // Add price range filters
+  if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+    matchStage.price = {};
+    if (filters.minPrice !== undefined) {
+      matchStage.price.$gte = parseFloat(filters.minPrice);
+    }
+    if (filters.maxPrice !== undefined) {
+      matchStage.price.$lte = parseFloat(filters.maxPrice);
+    }
+  }
+
+  // Add rating filter
+  if (filters.rating) {
+    matchStage.averageRating = { $gte: parseFloat(filters.rating) };
+  }
+
+  // Add tags filter
+  if (filters.tags && filters.tags.length > 0) {
+    matchStage.tags = { $in: filters.tags };
+  }
+
+  // Build sort stage
+  let sortStage = {};
+  switch (filters.sortBy) {
+    case 'popularity':
+      sortStage = { totalEnrollments: -1, averageRating: -1 };
+      break;
+    case 'rating':
+      sortStage = { averageRating: -1, totalEnrollments: -1 };
+      break;
+    case 'newest':
+      sortStage = { createdAt: -1 };
+      break;
+    case 'price-low':
+      sortStage = { price: 1 };
+      break;
+    case 'price-high':
+      sortStage = { price: -1 };
+      break;
+    default:
+      // If text search, sort by relevance score, otherwise by rating
+      sortStage = query 
+        ? { score: { $meta: 'textScore' }, averageRating: -1 } 
+        : { averageRating: -1, totalEnrollments: -1 };
+  }
+
+  // Build aggregation pipeline for optimized performance
+  const pipeline = [
+    { $match: matchStage },
+    // Add text score if doing text search
+    ...(query ? [{ $addFields: { score: { $meta: 'textScore' } } }] : []),
+    { $sort: sortStage },
+    { $skip: filters.skip || 0 },
+    { $limit: filters.limit || 20 },
+    // Lookup instructor details
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'instructor',
+        foreignField: '_id',
+        as: 'instructor'
+      }
+    },
+    { $unwind: '$instructor' },
+    // Project only needed fields for better performance
+    {
+      $project: {
+        title: 1,
+        subtitle: 1,
+        description: 1,
+        category: 1,
+        level: 1,
+        price: 1,
+        discount: 1,
+        thumbnail: 1,
+        averageRating: 1,
+        totalReviews: 1,
+        totalEnrollments: 1,
+        enrollmentCount: 1,
+        totalDuration: 1,
+        totalLectures: 1,
+        language: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        'instructor._id': 1,
+        'instructor.name': 1,
+        'instructor.email': 1,
+        'instructor.profilePicture': 1,
+        ...(query ? { score: 1 } : {})
+      }
+    }
+  ];
+
+  return this.aggregate(pipeline);
 };
 
 // Pre-save middleware
@@ -453,8 +558,8 @@ courseSchema.pre('save', function(next) {
   this.totalEnrollments = this.enrollments.length;
   
   // Auto-generate tags from title and description if tags are empty
-  if (this.tags.length === 0) {
-    const text = `${this.title} ${this.description}`.toLowerCase();
+  if (!this.tags || this.tags.length === 0) {
+    const text = `${this.title || ''} ${this.description || ''}`.toLowerCase();
     const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'learn', 'course', 'tutorial'];
     const words = text.match(/\b\w{3,}\b/g) || [];
     this.tags = [...new Set(words.filter(word => !commonWords.includes(word)))].slice(0, 10);

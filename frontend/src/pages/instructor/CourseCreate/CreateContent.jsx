@@ -16,15 +16,18 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
   
   // Initialize sections with frontend 'id' for tracking
   const initializeSections = () => {
-    if (data.sections && data.sections.length > 0) {
+    // Safely check if sections exist and is an array
+    if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {
       // If we have existing sections, add frontend 'id' based on order or generate timestamp
       return data.sections.map((section, sectionIndex) => ({
         ...section,
-        id: section._id || Date.now() + sectionIndex,
-        lectures: section.lectures.map((lecture, lectureIndex) => ({
-          ...lecture,
-          id: lecture._id || Date.now() + sectionIndex + lectureIndex
-        }))
+        id: section._id || section.id || Date.now() + sectionIndex,
+        lectures: Array.isArray(section.lectures) 
+          ? section.lectures.map((lecture, lectureIndex) => ({
+              ...lecture,
+              id: lecture._id || lecture.id || Date.now() + sectionIndex + lectureIndex
+            }))
+          : []
       }));
     }
     
@@ -58,15 +61,21 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
       description: '',
       lectures: []
     };
-    setSections([...sections, newSection]);
+    // ✅ SAFE: Validate sections before spreading
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections([...safeSections, newSection]);
   };
 
   const deleteSection = (sectionId) => {
-    setSections(sections.filter(section => section.id !== sectionId));
+    // ✅ SAFE: Validate sections before filtering
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.filter(section => section.id !== sectionId));
   };
 
   const updateSection = (sectionId, field, value) => {
-    setSections(sections.map(section => 
+    // ✅ SAFE: Validate sections before mapping
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.map(section => 
       section.id === sectionId 
         ? { ...section, [field]: value }
         : section
@@ -84,39 +93,56 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
       resources: []
     };
     
-    setSections(sections.map(section => 
-      section.id === sectionId 
-        ? { ...section, lectures: [...section.lectures, newLecture] }
-        : section
-    ));
+    // ✅ SAFE: Validate sections and lectures before spreading
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.map(section => {
+      if (section.id === sectionId) {
+        const safeLectures = Array.isArray(section.lectures) ? section.lectures : [];
+        return { ...section, lectures: [...safeLectures, newLecture] };
+      }
+      return section;
+    }));
   };
 
   const deleteLecture = (sectionId, lectureId) => {
-    setSections(sections.map(section => 
+    // ✅ SAFE: Already has validation
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.map(section => 
       section.id === sectionId 
-        ? { ...section, lectures: section.lectures.filter(lecture => lecture.id !== lectureId) }
+        ? { 
+            ...section, 
+            lectures: Array.isArray(section.lectures) 
+              ? section.lectures.filter(lecture => lecture.id !== lectureId)
+              : []
+          }
         : section
     ));
   };
 
   const updateLecture = (sectionId, lectureId, field, value) => {
-    setSections(sections.map(section => 
+    // ✅ SAFE: Already has validation
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.map(section => 
       section.id === sectionId 
         ? {
             ...section,
-            lectures: section.lectures.map(lecture => 
-              lecture.id === lectureId 
-                ? { ...lecture, [field]: value }
-                : lecture
-            )
+            lectures: Array.isArray(section.lectures)
+              ? section.lectures.map(lecture => 
+                  lecture.id === lectureId 
+                    ? { ...lecture, [field]: value }
+                    : lecture
+                )
+              : []
           }
         : section
     ));
   };
 
   const moveLecture = (sectionId, lectureId, direction) => {
-    setSections(sections.map(section => {
-      if (section.id === sectionId) {
+    // ✅ SAFE: Validate sections before mapping
+    const safeSections = Array.isArray(sections) ? sections : [];
+    setSections(safeSections.map(section => {
+      if (section.id === sectionId && Array.isArray(section.lectures)) {
         const lectures = [...section.lectures];
         const currentIndex = lectures.findIndex(lecture => lecture.id === lectureId);
         const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -132,25 +158,51 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
   };
 
   const handleSave = () => {
-    // Transform sections to match backend schema
-    const transformedSections = sections.map((section, sectionIndex) => {
-      // Remove frontend 'id' field and add 'order'
-      const { id, ...sectionData } = section;
-      
-      return {
-        ...sectionData,
-        order: sectionIndex + 1,
-        lectures: section.lectures.map((lecture, lectureIndex) => {
+    // Transform sections to match backend schema with safe array handling
+    const transformedSections = Array.isArray(sections) 
+      ? sections.map((section, sectionIndex) => {
+          // Ensure section is an object before destructuring
+          if (!section || typeof section !== 'object') {
+            return {
+              title: '',
+              description: '',
+              order: sectionIndex + 1,
+              lectures: []
+            };
+          }
+          
           // Remove frontend 'id' field and add 'order'
-          const { id, ...lectureData } = lecture;
+          const { id, ...sectionData } = section;
           
           return {
-            ...lectureData,
-            order: lectureIndex + 1
+            ...sectionData,
+            order: sectionIndex + 1,
+            lectures: Array.isArray(section.lectures)
+              ? section.lectures.map((lecture, lectureIndex) => {
+                  // Ensure lecture is an object before destructuring
+                  if (!lecture || typeof lecture !== 'object') {
+                    return {
+                      title: '',
+                      description: '',
+                      type: 'video',
+                      videoUrl: '',
+                      duration: 0,
+                      order: lectureIndex + 1
+                    };
+                  }
+                  
+                  // Remove frontend 'id' field and add 'order'
+                  const { id, ...lectureData } = lecture;
+                  
+                  return {
+                    ...lectureData,
+                    order: lectureIndex + 1
+                  };
+                })
+              : []
           };
         })
-      };
-    });
+      : [];
 
     updateData({
       sections: transformedSections
@@ -163,7 +215,7 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
       <div className="theme-card rounded-lg p-6">
         <h2 className="text-2xl font-bold theme-text-primary mb-6">Course Content</h2>
         
-        {sections.map((section, sectionIndex) => (
+        {Array.isArray(sections) && sections.map((section, sectionIndex) => (
           <div key={section.id} className="mb-8 theme-border-primary border rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold theme-text-primary">
@@ -209,7 +261,7 @@ const CreateContent = ({ data, updateData, onNext, onPrev }) => {
             <div className="space-y-4">
               <h4 className="text-md font-medium theme-text-primary">Lectures</h4>
               
-              {section.lectures.map((lecture, lectureIndex) => (
+              {Array.isArray(section.lectures) && section.lectures.map((lecture, lectureIndex) => (
                 <div key={lecture.id} className="theme-bg-secondary rounded-lg p-4 border theme-border-primary">
                   <div className="flex items-center justify-between mb-4">
                     <h5 className="text-sm font-medium theme-text-primary">

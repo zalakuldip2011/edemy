@@ -43,17 +43,25 @@ const UserProfile = () => {
   ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      // ✅ SAFE: Validate prev before spreading
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [field]: value
+      };
+    });
   };
 
   const handlePreferenceChange = (field, value) => {
-    setPreferences(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setPreferences(prev => {
+      // ✅ SAFE: Validate prev before spreading
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [field]: value
+      };
+    });
   };
 
   const handleSaveProfile = async () => {

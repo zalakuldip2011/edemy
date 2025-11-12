@@ -42,17 +42,25 @@ const Signup = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      // ✅ SAFE: Validate prev before spreading
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [name]: value
+      };
+    });
     
     // Clear specific error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => {
+        // ✅ SAFE: Validate prev before spreading
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return {
+          ...safePrev,
+          [name]: ''
+        };
+      });
     }
   };
 

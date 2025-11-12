@@ -43,25 +43,26 @@ const Dashboard = () => {
     try {
       setLoading(true);
       // Fetch enrollments
-      const enrollmentsRes = await fetch('/api/enrollments/my-courses', {
+      const enrollmentsRes = await fetch('/api/enrollments', {
         credentials: 'include'
       });
       const enrollmentsData = await enrollmentsRes.json();
       
       if (enrollmentsData.success) {
-        setEnrollments(enrollmentsData.data);
+        setEnrollments(enrollmentsData.enrollments || []);
         
-        // Calculate stats
-        const completed = enrollmentsData.data.filter(e => e.progress === 100).length;
-        const totalHours = enrollmentsData.data.reduce((sum, e) => 
+        // Calculate stats from the enrollments
+        const enrollmentsList = enrollmentsData.enrollments || [];
+        const completed = enrollmentsList.filter(e => e.status === 'completed').length;
+        const totalHours = enrollmentsList.reduce((sum, e) => 
           sum + (e.course?.totalDuration ? e.course.totalDuration / 3600 : 0), 0
         );
         
         setStats({
-          totalCourses: enrollmentsData.data.length,
+          totalCourses: enrollmentsList.length,
           completedCourses: completed,
           totalHours: Math.floor(totalHours),
-          certificates: completed,
+          certificates: enrollmentsData.stats?.certificatesEarned || completed,
           currentStreak: 7 // TODO: Calculate from activity
         });
       }
@@ -300,7 +301,7 @@ const Dashboard = () => {
                 {enrollments.slice(0, 5).map((enrollment) => (
                   <Link
                     key={enrollment._id}
-                    to={`/courses/${enrollment.course._id}/learn`}
+                    to={`/learn/${enrollment.course._id}`}
                     className={`block rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] ${
                       isDarkMode 
                         ? 'bg-gray-800 hover:bg-gray-750 border border-gray-700' 

@@ -27,7 +27,7 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
   const [thumbnailPreview, setThumbnailPreview] = useState(data?.thumbnail || null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState(data?.tags || []);
+  const [tags, setTags] = useState(Array.isArray(data?.tags) ? data.tags : []);
 
   // Auto-validate when data changes
   React.useEffect(() => {
@@ -40,16 +40,25 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      if (!tags.includes(newTag) && tags.length < 10) {
-        const updatedTags = [...tags, newTag];
-        setTags(updatedTags);
-        updateData({ tags: updatedTags });
-        setTagInput('');
+      // ✅ SAFE: Validate tags before spreading
+      const safeTags = Array.isArray(tags) ? tags : [];
+      if (safeTags.length === 0 || !safeTags.includes(newTag)) {
+        if (safeTags.length < 10) {
+          const updatedTags = [...safeTags, newTag];
+          setTags(updatedTags);
+          updateData({ tags: updatedTags });
+          setTagInput('');
+        }
       }
     }
   };
 
   const removeTag = (tagToRemove) => {
+    if (!Array.isArray(tags)) {
+      setTags([]);
+      updateData({ tags: [] });
+      return;
+    }
     const updatedTags = tags.filter(tag => tag !== tagToRemove);
     setTags(updatedTags);
     updateData({ tags: updatedTags });
@@ -95,15 +104,15 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
     if (!data?.description) errors.push('Course description is required');
     if (!data?.category) errors.push('Course category is required');
     if (!data?.level) errors.push('Course level is required');
-    if (!data?.learningOutcomes || data.learningOutcomes.length === 0) {
+    if (!Array.isArray(data?.learningOutcomes) || data.learningOutcomes.length === 0) {
       errors.push('At least one learning outcome is required');
     }
-    if (!data?.sections || data.sections.length === 0) {
+    if (!Array.isArray(data?.sections) || data.sections.length === 0) {
       errors.push('At least one section is required');
     }
-    if (data?.sections) {
+    if (Array.isArray(data?.sections) && data.sections.length > 0) {
       const hasLectures = data.sections.some(section => 
-        section.lectures && section.lectures.length > 0
+        Array.isArray(section.lectures) && section.lectures.length > 0
       );
       if (!hasLectures) errors.push('At least one lecture is required');
     }
@@ -113,37 +122,81 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
   };
 
   const handlePublish = () => {
-    // Re-validate before publishing
-    if (validateCourse()) {
-      const finalCourseData = {
-        ...data,
-        ...publishSettings,
-        isPublished: true,
-        publishedAt: new Date().toISOString()
-      };
-      updateData(finalCourseData);
-      onPublish(finalCourseData);
-    } else {
-      // Scroll to top to show validation errors
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      // Re-validate before publishing
+      if (validateCourse()) {
+        // Safely get data with defaults - NEVER spread undefined/null
+        const safeData = data && typeof data === 'object' ? data : {};
+        const safePublishSettings = publishSettings && typeof publishSettings === 'object' ? publishSettings : {};
+        const safeTags = Array.isArray(tags) ? tags : [];
+        
+        // Include ALL course data that might have been updated in this step
+        const updatedData = {
+          // Include any fields updated in this component
+          title: safeData.title || '',
+          subtitle: safeData.subtitle || '',
+          description: safeData.description || '',
+          category: safeData.category || '',
+          level: safeData.level || '',
+          language: safeData.language || 'English',
+          thumbnail: safeData.thumbnail || thumbnailPreview || '',
+          tags: safeTags,
+          // Include publish settings
+          price: safePublishSettings.price || safeData.price || 0,
+          featured: safePublishSettings.featured || false
+        };
+        console.log('✅ PublishCourse - Sending updated data:', updatedData);
+        // Pass updated data to parent
+        onPublish(updatedData);
+      } else {
+        // Scroll to top to show validation errors
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (error) {
+      console.error('❌ Error in handlePublish:', error);
+      alert(`Error preparing course data: ${error.message}`);
     }
   };
 
   const handleSaveDraft = () => {
-    const draftCourseData = {
-      ...data,
-      ...publishSettings,
-      isPublished: false
-    };
-    updateData(draftCourseData);
-    onSaveDraft(draftCourseData);
+    try {
+      // Safely get data with defaults - NEVER spread undefined/null
+      const safeData = data && typeof data === 'object' ? data : {};
+      const safePublishSettings = publishSettings && typeof publishSettings === 'object' ? publishSettings : {};
+      const safeTags = Array.isArray(tags) ? tags : [];
+      
+      // Include ALL course data that might have been updated in this step
+      const updatedData = {
+        // Include any fields updated in this component
+        title: safeData.title || '',
+        subtitle: safeData.subtitle || '',
+        description: safeData.description || '',
+        category: safeData.category || '',
+        level: safeData.level || '',
+        language: safeData.language || 'English',
+        thumbnail: safeData.thumbnail || thumbnailPreview || '',
+        tags: safeTags,
+        // Include publish settings
+        price: safePublishSettings.price || safeData.price || 0,
+        featured: safePublishSettings.featured || false
+      };
+      console.log('✅ PublishCourse - Saving draft with data:', updatedData);
+      // Pass updated data to parent
+      onSaveDraft(updatedData);
+    } catch (error) {
+      console.error('❌ Error in handleSaveDraft:', error);
+      alert(`Error preparing draft data: ${error.message}`);
+    }
   };
 
   const updatePublishSettings = (field, value) => {
-    setPublishSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setPublishSettings(prev => {
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [field]: value
+      };
+    });
   };
 
   return (
@@ -199,14 +252,18 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
                   onChange={(e) => {
                     updateData({ title: e.target.value });
                     // Clear validation errors if title is now filled
-                    if (e.target.value.trim() && validationErrors.includes('Course title is required')) {
-                      setValidationErrors(prev => prev.filter(err => err !== 'Course title is required'));
+                    if (e.target.value.trim()) {
+                      // ✅ SAFE: Validate prev before filtering
+                      setValidationErrors(prev => {
+                        const safePrev = Array.isArray(prev) ? prev : [];
+                        return safePrev.filter(err => err !== 'Course title is required');
+                      });
                     }
                   }}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                     data?.title && data.title.trim() 
                       ? 'border-green-300 bg-green-50' 
-                      : validationErrors.includes('Course title is required')
+                      : (Array.isArray(validationErrors) && validationErrors.includes('Course title is required'))
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300'
                   }`}
@@ -370,7 +427,7 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
                 </label>
                 <div className="space-y-2">
                   {/* Tags Display */}
-                  {tags.length > 0 && (
+                  {Array.isArray(tags) && tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
                       {tags.map((tag, index) => (
                         <span 
@@ -399,10 +456,10 @@ const PublishCourse = ({ data, updateData, onPrev, onSaveDraft, onPublish }) => 
                     onKeyDown={handleAddTag}
                     placeholder="Type a tag and press Enter (max 10 tags)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    disabled={tags.length >= 10}
+                    disabled={Array.isArray(tags) && tags.length >= 10}
                   />
                   <p className="text-xs text-gray-500">
-                    {tags.length}/10 tags • Press Enter to add
+                    {Array.isArray(tags) ? tags.length : 0}/10 tags • Press Enter to add
                   </p>
                 </div>
               </div>

@@ -17,7 +17,9 @@ import BecomeEducator from './pages/educator/BecomeEducator';
 import InstructorDashboard from './pages/instructor/Dashboard';
 import InstructorCourses from './pages/instructor/Courses';
 import CourseCreate from './pages/instructor/CourseCreate';
+import CourseAnalytics from './pages/instructor/CourseAnalytics';
 import CoursesRoutes from './pages/courses';
+import CourseLearning from './pages/courses/CourseLearning';
 import UserProfile from './pages/profile/UserProfile';
 import './App.css';
 import './styles/theme-global.css';
@@ -38,6 +40,13 @@ const AnimatedRoutes = () => {
         
         {/* Course Explorer - Public Access */}
         <Route path="/courses/*" element={<CoursesRoutes />} />
+        
+        {/* Course Learning - Student Access */}
+        <Route path="/learn/:courseId" element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <CourseLearning />
+          </ProtectedRoute>
+        } />
         
         {/* User Profile */}
         <Route path="/profile" element={
@@ -79,6 +88,16 @@ const AnimatedRoutes = () => {
         <Route path="/instructor/courses/create" element={
           <ProtectedRoute allowedRoles={['instructor']}>
             <CourseCreate />
+          </ProtectedRoute>
+        } />
+        <Route path="/instructor/courses/edit/:id" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <CourseCreate />
+          </ProtectedRoute>
+        } />
+        <Route path="/instructor/courses/:id/analytics" element={
+          <ProtectedRoute allowedRoles={['instructor']}>
+            <CourseAnalytics />
           </ProtectedRoute>
         } />
       </Routes>

@@ -34,17 +34,25 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      // ✅ SAFE: Validate prev before spreading
+      const safePrev = prev && typeof prev === 'object' ? prev : {};
+      return {
+        ...safePrev,
+        [name]: value
+      };
+    });
     
     // Clear specific error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => {
+        // ✅ SAFE: Validate prev before spreading
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return {
+          ...safePrev,
+          [name]: ''
+        };
+      });
     }
   };
 
@@ -81,7 +89,7 @@ const Login = () => {
       const result = await login(formData.emailOrUsername, formData.password);
       
       if (result.success) {
-        setSuccess(result.message);
+        setSuccess(result.message || 'Login successful!');
         // Redirect will happen automatically via useEffect when isAuthenticated changes
       } else {
         // Handle different types of errors
@@ -92,21 +100,32 @@ const Login = () => {
           setTimeout(() => navigate('/signup'), 2000);
         } else if (result.code === 'EMAIL_NOT_VERIFIED') {
           setErrors({ 
-            submit: result.message
+            submit: result.message || 'Please verify your email before logging in.'
           });
-          // Don't redirect to verification for login attempts - account needs to be verified through original signup flow
         } else if (result.code === 'INVALID_CREDENTIALS') {
-          setErrors({ password: result.message });
+          // Show error on password field specifically
+          setErrors({ 
+            password: result.message || 'Invalid password. Please try again.' 
+          });
         } else if (result.code === 'ACCOUNT_LOCKED') {
-          setErrors({ submit: result.message });
+          setErrors({ 
+            submit: result.message || 'Your account has been locked. Please contact support.'
+          });
         } else if (result.errors) {
+          // Handle validation errors from backend
           setErrors(result.errors);
         } else {
-          setErrors({ submit: result.message });
+          // Generic error
+          setErrors({ 
+            submit: result.message || 'Login failed. Please check your credentials and try again.' 
+          });
         }
       }
     } catch (error) {
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+      console.error('Login error:', error);
+      setErrors({ 
+        submit: 'An unexpected error occurred. Please try again.' 
+      });
     }
   };
 

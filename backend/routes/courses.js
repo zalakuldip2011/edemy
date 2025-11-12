@@ -16,8 +16,10 @@ const {
   createCourse,
   getInstructorCourse,
   updateCourse,
+  togglePublishCourse,
   deleteCourse,
-  toggleCourseStatus
+  toggleCourseStatus,
+  getCourseAnalytics
 } = require('../controllers/courseController');
 
 // Public course routes (no authentication required)
@@ -33,7 +35,9 @@ router.get('/instructor/dashboard/stats', auth, requireRole('instructor'), getCo
 router.get('/instructor', auth, requireRole('instructor'), getInstructorCourses);
 router.post('/instructor', auth, requireRole('instructor'), createCourse);
 router.get('/instructor/:id', auth, requireRole('instructor'), getInstructorCourse);
+router.get('/instructor/:id/analytics', auth, requireRole('instructor'), getCourseAnalytics);
 router.put('/instructor/:id', auth, requireRole('instructor'), updateCourse);
+router.put('/instructor/:id/publish', auth, requireRole('instructor'), togglePublishCourse);
 router.delete('/instructor/:id', auth, requireRole('instructor'), deleteCourse);
 router.patch('/instructor/:id/status', auth, requireRole('instructor'), toggleCourseStatus);
 

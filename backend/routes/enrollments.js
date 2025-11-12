@@ -4,39 +4,43 @@ const {
   enrollCourse,
   getMyEnrollments,
   getEnrollment,
-  updateProgress
+  updateProgress,
+  completeLecture,
+  issueCertificate,
+  addNote,
+  updateNote,
+  deleteNote,
+  addBookmark,
+  deleteBookmark,
+  getCourseStats,
+  getInstructorEnrollments
 } = require('../controllers/enrollmentController');
 const { auth, requireRole } = require('../middleware/auth');
 
 // All routes require authentication
 router.use(auth);
 
-/**
- * @route   POST /api/enrollments
- * @desc    Enroll in a course
- * @access  Private (Student)
- */
+// Student enrollment routes
 router.post('/', requireRole('student'), enrollCourse);
-
-/**
- * @route   GET /api/enrollments
- * @desc    Get all my enrollments
- * @access  Private (Student)
- */
 router.get('/', requireRole('student'), getMyEnrollments);
+router.get('/:id', getEnrollment);
+router.put('/:id/progress', requireRole('student'), updateProgress);
+router.post('/:id/complete-lecture', requireRole('student'), completeLecture);
 
-/**
- * @route   GET /api/enrollments/:enrollmentId
- * @desc    Get a specific enrollment
- * @access  Private (Student)
- */
-router.get('/:enrollmentId', requireRole('student'), getEnrollment);
+// Notes routes
+router.post('/:id/notes', requireRole('student'), addNote);
+router.put('/:id/notes/:noteId', requireRole('student'), updateNote);
+router.delete('/:id/notes/:noteId', requireRole('student'), deleteNote);
 
-/**
- * @route   PUT /api/enrollments/:enrollmentId/progress
- * @desc    Update progress (mark lecture complete)
- * @access  Private (Student)
- */
-router.put('/:enrollmentId/progress', requireRole('student'), updateProgress);
+// Bookmarks routes
+router.post('/:id/bookmarks', requireRole('student'), addBookmark);
+router.delete('/:id/bookmarks/:bookmarkId', requireRole('student'), deleteBookmark);
+
+// Certificate routes
+router.post('/:id/certificate', issueCertificate);
+
+// Instructor routes
+router.get('/course/:courseId/stats', requireRole('instructor'), getCourseStats);
+router.get('/instructor/students', requireRole('instructor'), getInstructorEnrollments);
 
 module.exports = router;

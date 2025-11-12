@@ -102,9 +102,14 @@ const authReducer = (state, action) => {
       };
 
     case AUTH_ACTIONS.UPDATE_PROFILE:
+      // ✅ SAFE: Validate state and user before spreading
+      const safeState = state && typeof state === 'object' ? state : {};
+      const safeUser = safeState.user && typeof safeState.user === 'object' ? safeState.user : {};
+      const safePayload = action.payload && typeof action.payload === 'object' ? action.payload : {};
+      
       return {
-        ...state,
-        user: { ...state.user, ...action.payload }
+        ...safeState,
+        user: { ...safeUser, ...safePayload }
       };
 
     default:
@@ -176,16 +181,17 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, message: response.data.message };
     } catch (error) {
-      const errorData = error.response?.data || { message: 'Login failed' };
+      const errorData = error.response?.data || { message: 'Login failed. Please try again.' };
       
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errorData
       });
       
+      // Return error details to the component
       return { 
         success: false, 
-        message: errorData.message,
+        message: errorData.message || 'Login failed. Please check your credentials.',
         code: errorData.code,
         action: errorData.action,
         errors: errorData.errors

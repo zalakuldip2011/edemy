@@ -12,39 +12,55 @@ const PlanYourCourse = ({ data, updateData, onNext, onSave }) => {
   const [loading, setSaving] = useState(false);
   const { isDarkMode } = useTheme();
 
+  // Safely get arrays with defaults
+  const learningOutcomes = Array.isArray(data?.learningOutcomes) && data.learningOutcomes.length > 0 
+    ? data.learningOutcomes 
+    : [''];
+  const prerequisites = Array.isArray(data?.prerequisites) && data.prerequisites.length > 0
+    ? data.prerequisites
+    : [''];
+
   const addLearningOutcome = () => {
-    const newOutcomes = [...data.learningOutcomes, ''];
+    // ✅ SAFE: learningOutcomes already validated above, but extra safety
+    const safeOutcomes = Array.isArray(learningOutcomes) ? learningOutcomes : [''];
+    const newOutcomes = [...safeOutcomes, ''];
     updateData({ learningOutcomes: newOutcomes });
   };
 
   const removeLearningOutcome = (index) => {
-    if (data.learningOutcomes.length > 1) {
-      const newOutcomes = data.learningOutcomes.filter((_, i) => i !== index);
+    const safeOutcomes = Array.isArray(learningOutcomes) ? learningOutcomes : [''];
+    if (safeOutcomes.length > 1) {
+      const newOutcomes = safeOutcomes.filter((_, i) => i !== index);
       updateData({ learningOutcomes: newOutcomes });
     }
   };
 
   const updateLearningOutcome = (index, value) => {
-    const newOutcomes = data.learningOutcomes.map((outcome, i) => 
+    const safeOutcomes = Array.isArray(learningOutcomes) ? learningOutcomes : [''];
+    const newOutcomes = safeOutcomes.map((outcome, i) => 
       i === index ? value : outcome
     );
     updateData({ learningOutcomes: newOutcomes });
   };
 
   const addPrerequisite = () => {
-    const newPrerequisites = [...data.prerequisites, ''];
+    // ✅ SAFE: prerequisites already validated above, but extra safety
+    const safePrereqs = Array.isArray(prerequisites) ? prerequisites : [''];
+    const newPrerequisites = [...safePrereqs, ''];
     updateData({ prerequisites: newPrerequisites });
   };
 
   const removePrerequisite = (index) => {
-    if (data.prerequisites.length > 1) {
-      const newPrerequisites = data.prerequisites.filter((_, i) => i !== index);
+    const safePrereqs = Array.isArray(prerequisites) ? prerequisites : [''];
+    if (safePrereqs.length > 1) {
+      const newPrerequisites = safePrereqs.filter((_, i) => i !== index);
       updateData({ prerequisites: newPrerequisites });
     }
   };
 
   const updatePrerequisite = (index, value) => {
-    const newPrerequisites = data.prerequisites.map((prerequisite, i) => 
+    const safePrereqs = Array.isArray(prerequisites) ? prerequisites : [''];
+    const newPrerequisites = safePrereqs.map((prerequisite, i) => 
       i === index ? value : prerequisite
     );
     updateData({ prerequisites: newPrerequisites });
@@ -102,7 +118,7 @@ const PlanYourCourse = ({ data, updateData, onNext, onSave }) => {
               }`}>(Minimum 4 outcomes)</span>
             </label>
             <div className="space-y-3">
-              {data.learningOutcomes.map((outcome, index) => (
+              {learningOutcomes.map((outcome, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                     isDarkMode 
@@ -122,7 +138,7 @@ const PlanYourCourse = ({ data, updateData, onNext, onSave }) => {
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500'
                     }`}
                   />
-                  {data.learningOutcomes.length > 1 && (
+                  {learningOutcomes.length > 1 && (
                     <button
                       onClick={() => removeLearningOutcome(index)}
                       className={`flex-shrink-0 p-2 transition-colors ${
@@ -181,7 +197,7 @@ const PlanYourCourse = ({ data, updateData, onNext, onSave }) => {
               }`}>(Optional)</span>
             </label>
             <div className="space-y-3">
-              {data.prerequisites.map((prerequisite, index) => (
+              {prerequisites.map((prerequisite, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                     isDarkMode 
@@ -201,7 +217,7 @@ const PlanYourCourse = ({ data, updateData, onNext, onSave }) => {
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500'
                     }`}
                   />
-                  {data.prerequisites.length > 1 && (
+                  {prerequisites.length > 1 && (
                     <button
                       onClick={() => removePrerequisite(index)}
                       className={`flex-shrink-0 p-2 transition-colors ${

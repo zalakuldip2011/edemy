@@ -32,10 +32,14 @@ const EmailVerification = () => {
     const emailFromParams = urlParams.get('email');
     
     if (emailFromState || emailFromParams) {
-      setFormData(prev => ({
-        ...prev,
-        email: emailFromState || emailFromParams
-      }));
+      setFormData(prev => {
+        // ✅ SAFE: Validate prev before spreading
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return {
+          ...safePrev,
+          email: emailFromState || emailFromParams
+        };
+      });
     }
   }, [location]);
 
@@ -56,9 +60,17 @@ const EmailVerification = () => {
     // For OTP, only allow numbers and limit to 6 digits
     if (name === 'otp') {
       const numericValue = value.replace(/[^0-9]/g, '').slice(0, 6);
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      setFormData(prev => {
+        // ✅ SAFE: Validate prev before spreading
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return { ...safePrev, [name]: numericValue };
+      });
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        // ✅ SAFE: Validate prev before spreading
+        const safePrev = prev && typeof prev === 'object' ? prev : {};
+        return { ...safePrev, [name]: value };
+      });
     }
     
     // Clear errors when user starts typing

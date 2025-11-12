@@ -69,7 +69,9 @@ const CourseViewer = () => {
     setCompletedLectures(newCompleted);
     
     // Save to localStorage
-    localStorage.setItem(`completed_${courseId}`, JSON.stringify([...newCompleted]));
+    // ✅ SAFE: Validate Set before spreading
+    const safeCompleted = newCompleted instanceof Set ? newCompleted : new Set();
+    localStorage.setItem(`completed_${courseId}`, JSON.stringify([...safeCompleted]));
   };
 
   const isLectureCompleted = (sectionIndex, lectureIndex) => {

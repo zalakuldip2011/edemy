@@ -45,7 +45,12 @@ exports.enrollCourse = async (req, res) => {
     }
 
     // Check if already enrolled
-    const existingEnrollment = await Enrollment.isEnrolled(studentId, courseId);
+    const existingEnrollment = await Enrollment.findOne({
+      student: studentId,
+      course: courseId,
+      status: { $in: ['active', 'completed'] }
+    });
+    
     if (existingEnrollment) {
       return res.status(400).json({
         success: false,
